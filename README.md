@@ -1,2 +1,3 @@
 # bmstu-cg
-Computer graphics
+
+A course on computer graphics
