@@ -1,0 +1,2 @@
+# bmstu-cg
+Computer graphics
