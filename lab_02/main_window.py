@@ -128,11 +128,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.change_btn_state()
         self.repaint()
 
-
     def set_center(self):
-                self.best_scale_btn.clicked.connect(self.scaleAnswer)
-r))
-
+        self.best_scale_btn.clicked.connect(self.scaleAnswer)
 
     def bindButtons(self):
         self.dec_btn.clicked.connect(self.canvas.decrease)
