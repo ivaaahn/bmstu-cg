@@ -7,10 +7,10 @@ from astroid import Astroid
 from errors import ErrorInput
 from popups import BChangePopup
 from loguru import logger
-
 from math import radians
-import typing
 from typing import NamedTuple
+
+import typing
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -132,6 +132,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.best_scale_btn.clicked.connect(self.scaleAnswer)
 
     def bindButtons(self):
+        self.best_scale_btn.clicked.connect(self.scaleAnswer)
+        self.bchange_btn.clicked.connect(self.b_change)
+
+        self.draw_btn.clicked.connect(self.draw)
         self.dec_btn.clicked.connect(self.canvas.decrease)
         self.inc_btn.clicked.connect(self.canvas.increase)
 
@@ -144,11 +148,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.rotate_btn.clicked.connect(self.rotate)
         self.rotate_btn.setEnabled(False)
 
-        self.bchange_btn.clicked.connect(self.b_change)
-        self.draw_btn.clicked.connect(self.draw)
         self.back_btn.clicked.connect(self.back)
         self.back_btn.setEnabled(False)
-        self.best_scale_btn.clicked.connect(self.scaleAnswer)
+
         self.reset_btn.clicked.connect(self.reset)
         self.reset_btn.setEnabled(False)
 
