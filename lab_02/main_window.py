@@ -57,21 +57,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         def _get_data(self) -> typing.NamedTuple or None:
             class ScaleData(NamedTuple):
                 center: Point = None
-                coef: float = None
+                x_coef: float = None
+                y_coef: float = None
 
                 def __repr__(self) -> str:
-                    return f'center: {self.center}, coef: {self.coef}'
+                    return f'center: {self.center}, x_coef: {self.x_coef}, y_coef: {self.y_coef}'
 
             try:
                 xc, yc = float(self.xc_scale_input.text()), float(
                     self.yc_scale_input.text())
-                coef = float(self.coef_input.text())
+                x_coef = float(self.x_coef_input.text())
+                y_coef = float(self.y_coef_input.text())
             except ValueError:
                 err = ErrorInput("Введите вещественное число")
                 if err.clickedButton() is QMessageBox.Cancel:
                     return None
             else:
-                data = ScaleData(Point(point=(xc, yc)), coef)
+                data = ScaleData(Point(point=(xc, yc)), x_coef, y_coef)
                 return data
 
         scale_data = _get_data(self)
@@ -126,6 +128,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.change_btn_state()
         self.repaint()
 
+
+    def set_center(self):
+                self.best_scale_btn.clicked.connect(self.scaleAnswer)
+r))
+
+
     def bindButtons(self):
         self.dec_btn.clicked.connect(self.canvas.decrease)
         self.inc_btn.clicked.connect(self.canvas.increase)
@@ -143,20 +151,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.draw_btn.clicked.connect(self.draw)
         self.back_btn.clicked.connect(self.back)
         self.back_btn.setEnabled(False)
-
         self.best_scale_btn.clicked.connect(self.scaleAnswer)
-
         self.reset_btn.clicked.connect(self.reset)
         self.reset_btn.setEnabled(False)
 
     def back(self):
         self.astroid.back()
         self.back_btn.setEnabled(False)
+        self.set_center()
         self.repaint()
 
     def reset(self):
         self.astroid.reset()
         self.back_btn.setEnabled(True)
+        self.set_center()
         self.repaint()
 
     def closeEvent(self, event):

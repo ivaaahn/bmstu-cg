@@ -30,7 +30,7 @@ class Astroid():
     def b(self, value: float):
         self._b = value
         self.clear_values()
-    
+
     @property
     def center(self):
         logger.debug(f'center is {self._center}')
@@ -76,8 +76,8 @@ class Astroid():
                              [0,                     1,           0],
                              [-data.center.x,  -data.center.y,    1]])
 
-        scale = np.array([[data.coef,   0,     0],
-                          [0,     data.coef,   0],
+        scale = np.array([[data.x_coef,   0,     0],
+                          [0,     data.y_coef,   0],
                           [0,      0,     1]])
 
         to_place = np.array([[1,                     0,         0],
@@ -109,22 +109,26 @@ class Astroid():
         if self._last_mtrx is not None:
             self._res_mtrx = self._last_mtrx
             self._last_mtrx = None
-        
+
+            # self._update_center()
 
     def reset(self) -> typing.NoReturn:
         self._last_mtrx = self._res_mtrx
         self._res_mtrx = np.eye(3)
 
+    def _update_center(self):
+        self._center = (Point(x=-self.b, y=-self.b) +
+                        Point(x=self.b, y=self.b)) / 2
+
     def _update_rect_points(self):
-        self._raw_rect_points = tmp = [
+        self._raw_rect_points = [
             Point(x=-self.b, y=self.b),
             Point(x=self.b, y=self.b),
             Point(x=-self.b, y=-self.b),
             Point(x=self.b, y=-self.b)
         ]
 
-        self._center = (Point(x=-self.b, y=-self.b) + Point(x=self.b, y=self.b)) / 2
-
+        self._update_center()
 
     def _update_values(self):
         def _x(t: float) -> float:
@@ -137,11 +141,9 @@ class Astroid():
             self._raw_values.append(
                 Point(x=_x(t), y=_y(t)))
 
-
     @logger.catch
     def transformed(self, point: Point) -> Point:
         return Point(point=tuple(point.to_ndarray().dot(self._res_mtrx)[:-1]))
-        
 
     # def _update_center(self):
     #     bp = self.border_points
