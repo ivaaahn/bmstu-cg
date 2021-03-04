@@ -110,8 +110,6 @@ class Astroid():
             self._res_mtrx = self._last_mtrx
             self._last_mtrx = None
 
-            # self._update_center()
-
     def reset(self) -> typing.NoReturn:
         self._last_mtrx = self._res_mtrx
         self._res_mtrx = np.eye(3)
@@ -144,11 +142,3 @@ class Astroid():
     @logger.catch
     def transformed(self, point: Point) -> Point:
         return Point(point=tuple(point.to_ndarray().dot(self._res_mtrx)[:-1]))
-
-    # def _update_center(self):
-    #     bp = self.border_points
-    #     if bp:
-    #         p_min = Point(x=min([p.x for p in bp]), y=min([p.y for p in bp]))
-    #         p_max = Point(x=max([p.x for p in bp]), y=max([p.y for p in bp]))
-    #         p_c = (p_min + p_max) / 2
-    #     return p_c
