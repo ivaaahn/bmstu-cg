@@ -2,14 +2,13 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QTableWidgetItem, QLineEdit, Q
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QPainter, QBrush, QPen, QPolygon, QPixmap
+from loguru import logger
 
 from design.task_popup import Ui_TaskPopup
 from design.b_change_popup import Ui_b_change_popup
-
 from errors import ErrorInput
 from point import Point
 from astroid import Astroid
-from loguru import logger
 
 
 class TaskPopup(QWidget, Ui_TaskPopup):
