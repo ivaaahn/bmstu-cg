@@ -17,22 +17,21 @@ class Astroid():
 
         self._need_draw = False
         self._last_mtrx = None
-
         self._res_mtrx = np.eye(3)
         self._raw_values = []
         self._raw_rect_points = []
 
     @property
-    def b(self):
+    def b(self) -> float:
         return self._b
 
     @b.setter
-    def b(self, value: float):
+    def b(self, value: float) -> typing.NoReturn:
         self._b = value
         self.clear_values()
 
     @property
-    def center(self):
+    def center(self) -> float:
         logger.debug(f'center is {self._center}')
         return self.transformed(self._center)
 
@@ -54,10 +53,10 @@ class Astroid():
                 self._update_values()
             return list(map(self.transformed, self._raw_values))
 
-    def change_draw(self):
+    def change_draw(self) -> typing.NoReturn:
         self._need_draw = not self._need_draw
 
-    def clear_values(self):
+    def clear_values(self) -> typing.NoReturn:
         self._raw_values.clear()
         self._raw_rect_points.clear()
 
@@ -69,7 +68,7 @@ class Astroid():
                                                     [0,           1,         0],
                                                     [data.dx,  data.dy,      1]])
 
-    def scale(self, data: typing.NamedTuple) -> typing.NoReturn:
+    def scale(self, data: typing.NamedTuple) -> typing.NoReturn:        
         logger.debug(data)
 
         to_start = np.array([[1,                     0,           0],
@@ -114,11 +113,11 @@ class Astroid():
         self._last_mtrx = self._res_mtrx
         self._res_mtrx = np.eye(3)
 
-    def _update_center(self):
+    def _update_center(self) -> typing.NoReturn:
         self._center = (Point(x=-self.b, y=-self.b) +
                         Point(x=self.b, y=self.b)) / 2
 
-    def _update_rect_points(self):
+    def _update_rect_points(self) -> typing.NoReturn:
         self._raw_rect_points = [
             Point(x=-self.b, y=self.b),
             Point(x=self.b, y=self.b),
@@ -128,14 +127,14 @@ class Astroid():
 
         self._update_center()
 
-    def _update_values(self):
+    def _update_values(self) -> typing.NoReturn:
         def _x(t: float) -> float:
             return self._b * cos(t) ** 3
 
         def _y(t: float) -> float:
             return self._b * sin(t) ** 3
 
-        for t in linspace(0, 2 * pi, 2000):
+        for t in linspace(0, 2 * pi, 2500):
             self._raw_values.append(
                 Point(x=_x(t), y=_y(t)))
 

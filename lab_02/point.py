@@ -1,9 +1,10 @@
 from __future__ import division
 
 from PyQt5.QtCore import QPoint
-import numpy as np
 from loguru import logger
 from typing import overload
+
+import numpy as np
 
 
 class Point():

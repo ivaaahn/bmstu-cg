@@ -2,13 +2,15 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from point import Point
-import numpy as np
-from errors import ScaleInfo
-import typing
 from loguru import logger
 from math import cos, sin
+
+import numpy as np
+import typing
 import sys
+
 from astroid import Astroid
+from errors import ScaleInfo
 
 
 class Canvas(QtWidgets.QLabel):

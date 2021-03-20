@@ -1,14 +1,15 @@
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
 from PyQt5.QtCore import Qt, QRect, QPoint
 from PyQt5.QtGui import QPainter, QBrush, QPen, QPixmap
-from design.main_window import Ui_MainWindow
-from point import Point
-from astroid import Astroid
-from errors import ErrorInput
-from popups import BChangePopup
 from loguru import logger
 from math import radians
 from typing import NamedTuple
+
+from design.main_window import Ui_MainWindow
+from popups import BChangePopup, TaskPopup
+from errors import ErrorInput
+from point import Point
+from astroid import Astroid
 
 import typing
 
@@ -129,7 +130,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.repaint()
 
     def set_center(self):
-        self.best_scale_btn.clicked.connect(self.scaleAnswer)
+        self.center_info_value.setText(str(self.astroid.center))
 
     def bindButtons(self):
         self.best_scale_btn.clicked.connect(self.scaleAnswer)
@@ -153,6 +154,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.reset_btn.clicked.connect(self.reset)
         self.reset_btn.setEnabled(False)
+
+        # self.help_btn.clicked.connect(self.showTaskPopup)
 
     def back(self):
         self.astroid.back()

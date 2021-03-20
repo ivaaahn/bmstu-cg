@@ -1,8 +1,10 @@
-import sys
 from PyQt5.QtWidgets import QApplication
+from loguru import logger
+
+import sys
+
 from main_window import MainWindow
 
-from loguru import logger
 
 logger.remove()
 logger.add("./logs/spam.log", rotation="08:00", level='DEBUG')
