@@ -1,3 +1,5 @@
+from PyQt5.QtCore import QPoint
+from loguru import logger
 from point import Point
 from enum import Enum
 import typing
@@ -34,15 +36,6 @@ class Color(Enum):
         }
         return interp[self]
 
-    # def __init__(self, id: int, title :str) -> None:
-    #     self.id, self.title = id, title
-
-    # def __repr__(self) -> str:
-        # return f'Algorithm <{self.title}>'
-
-    # def __str__(self) -> str:
-        # return f'{'
-
 class Line:
     def __init__(self, p_start: Point, p_end: Point, alg: Algorithm, color: Color):
         self.p_start, self.p_end = p_start, p_end
@@ -52,10 +45,11 @@ class Line:
         self.need_draw = False
         self._points = self._calc_points()
 
+        logger.info(f"points = {self._points}")
 
     @property
-    def all_points(self) -> List[Point]:
-        return self._values
+    def points(self) -> List[Point]:
+        return self._points
 
     def __repr__(self) -> str:
         return f"Line <{str(self.p_start)}, {str(self.p_end)}, {self.alg}, {self.color}>"
@@ -80,12 +74,35 @@ class Line:
 
 
     @staticmethod
-    def _lib(p_start: Point, p_end: Point) -> List[Point]:
-        return [p_start, p_end]
+    def _lib(p_start: Point, p_end: Point) -> None:
+        return None
+
 
     @staticmethod
     def _dda(p_start: Point, p_end: Point) -> List[Point]:
-        pass
+        def _sign(num: float) -> int:
+                return 1 if num > 0 else -1
+
+        values: List[Point] = []
+
+        length = max(abs(p_end.x - p_start.x), abs(p_end.y - p_start.y))
+
+        dx = (p_end.x - p_start.x) / length
+        dy = (p_end.y - p_start.y) / length
+
+        x = int(p_start.x + 0.5 * _sign(dx))
+        y = int(p_start.y + 0.5 * _sign(dy))
+
+        i = 1
+        while(i <= length):
+            values.append(Point(x, y))
+            x += dx
+            y += dy
+            i += 1
+
+        return values
+
+
 
     @staticmethod
     def _ibres(p_start: Point, p_end: Point) -> List[Point]:

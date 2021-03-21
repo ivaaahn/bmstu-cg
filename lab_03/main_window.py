@@ -22,7 +22,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.data = Data()
-        # self.lines_table = LinesTable()
         self.bindButtons()
 
 
@@ -41,142 +40,70 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return (Point(x_start, y_start), Point(x_end, y_end))
 
-
     def _read_color(self) -> Color:
         return Color(self.color_list.currentRow())
 
     def _read_alg(self) -> Algorithm:
         return Algorithm(self.alg_list.currentRow())
 
-
     def _add_line_handler(self) -> NoReturn:
         color: Color = self._read_color()
         alg: Algorithm = self._read_alg()
         coords: typing.Tuple[Point] = self._read_coords()
+        line_id: int = self.data._get_id()
 
         logger.debug(f"_add_line_handler({alg, color, coords})")
         if coords is not None:
-            self.data.add_line(alg, color, coords)
-            self.lines_table.add(alg, color, coords)
+            self.data.add_line(alg, color, coords, line_id)
+            self.lines_table.add(alg, color, coords, line_id)
 
         logger.debug(f"Data.lines = {self.data.lines}")
-        
+        self.repaint()
 
 
-    
-    # def draw(self):
-    #     self.astroid.change_draw()
-    #     self.change_btn_state()
-    #     self.repaint()
+    def _remove_line_handler(self) -> NoReturn:
+        line_id = self.lines_table.read_id()
+        logger.debug(f"line_id = {line_id}")
+        if line_id is not None:
+            self.data.remove_line(line_id)
+            self.lines_table.remove()
+            self.repaint()
+
+    def _remove_all_lines_handler(self) -> NoReturn:
+        self.data.remove_all_lines()
+        self.lines_table.remove_all()
+        self.repaint()
 
 
     def bindButtons(self):
-        self.clear_btn.clicked.connect(self.clear)
-        self.segment_btn.clicked.connect(self._add_line_handler)
+        self.add_btn.clicked.connect(self._add_line_handler)
+        self.remove_btn.clicked.connect(self._remove_line_handler)
+        self.remove_all_btn.clicked.connect(self._remove_all_lines_handler)
 
-    # Чо-как сделать это...
-    def clear(self):
-        pass
-
-    # def reset(self):
-    #     self.astroid.reset()
-    #     self.back_btn.setEnabled(True)
-    #     self.set_center()
-    #     self.repaint()
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
                                      "Вы уверены?", QMessageBox.Yes |
                                      QMessageBox.No, QMessageBox.No)
-
         if reply == QMessageBox.Yes:
             event.accept()
         else:
             event.ignore()
 
    
-    def _draw_line(self, qp: QPainter) -> typing.NoReturn:
-        pass
+    def _draw_line(self, line: Line, qp: QPainter) -> NoReturn:
+        all_points = line.points
+        if all_points is None:
+            qp.drawLine(line.p_start.x, line.p_start.y, line.p_end.x, line.p_end.y)
+        else:
+            for point in line.points:
+                qp.drawPoint(point.x, point.y)
 
 
-    def _draw_grid(self, qp: QPainter):
-        qp.setPen(QPen(Qt.green, 1))
-
-        coef = self.canvas.coef
-
-        for x in range(self.x0, self.x_max, coef):
-            qp.drawLine(x, self.y_min, x, self.y_max)
-
-        for x in range(self.x0 - coef, self.x_min, -coef):
-            qp.drawLine(x, self.y_min, x, self.y_max)
-
-        for y in range(self.y0, self.y_max, coef):
-            qp.drawLine(self.x_min, y, self.x_max, y)
-
-        for y in range(self.y0 - coef, self.y_min, -coef):
-            qp.drawLine(self.x_min, y, self.x_max, y)
-
-
-    def _draw_axis(self, qp: QPainter) -> typing.NoReturn:
-        qp.setPen(QPen(Qt.black, 3))
-        # Отрисовка самих осей
-        qp.drawLine(self.x0, self.y_min, self.x0, self.y_max)
-        qp.drawLine(self.x_min, self.y0, self.x_max, self.y0)
-
-        # Отрисовка стрелок
-        qp.drawLine(self.x_max-12, self.y0-7, self.x_max, self.y0)
-        qp.drawLine(self.x_max-12, self.y0+7, self.x_max, self.y0)
-        qp.drawLine(self.x0, self.y_min, self.x0-7, self.y_min+12)
-        qp.drawLine(self.x0, self.y_min, self.x0+7, self.y_min+12)
-
-
-        font = qp.font()
-        font.setPointSize(14)
-        coef = self.canvas.coef
-
-        qp.setFont(font)
-        qp.setPen(QPen(Qt.black))
-        qp.drawText(self.x0 - 15, self.y0 + 20, '0')
-
-        offset_yp, offset_ym = 30, 25
-        offset_x = 20
-
-        # Отрисовка чисел
-        k = -1
-        for y in range(self.y0 + coef, self.y_max, coef):
-            qp.drawText(self.x0 - offset_yp, y + 7, str(k))
-            k -= 1
-
-        k = 1
-        for y in range(self.y0 - coef, self.y_min, -coef):
-            qp.drawText(self.x0 - offset_ym, y + 7, str(k))
-            k += 1
-
-        k = 1
-        for x in range(self.x0 + coef, self.x_max, coef):
-            qp.drawText(x - 5, self.y0 + offset_x, str(k))
-            k += 1
-
-        k = -1
-        for x in range(self.x0 - coef, self.x_min, -coef):
-            qp.drawText(x - 10, self.y0 + offset_x, str(k))
-            k -= 1
-
-    # def _draw_astroid(self, qp: QPainter):
-    #     qp.setPen(QPen(Qt.red, 3))
-    #     for point in self.astroid.values:
-    #         point = self.canvas.toCanv(point)
-    #         qp.drawPoint(point.x, point.y)
-
-    #     border_points = self.astroid.border_points
-    #     if len(border_points):
-    #         tl, tr, bl, br = list(
-    #             map(lambda x: self.canvas.toCanv(x).to_qpoint(), border_points))
-    #         qp.drawLine(tl, tr)
-    #         qp.drawLine(bl, br)
-    #         qp.drawLine(tl, bl)
-    #         qp.drawLine(tr, br)
-
+    def _draw_lines(self, qp: QPainter) -> NoReturn:
+        for _, line in self.data.lines.items():
+            self._draw_line(line, qp)
+            
 
     def paintEvent(self, event):
         if not self.canvas.init_sizes:
@@ -193,12 +120,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.y0 = self.canvas.y0
 
         qp = QPainter(self)
+
+        pen = QPen(Qt.red, 1)
+        qp.setPen(pen)
+
         qp.drawPixmap(QRect(self.x_min, self.y_min, self.x_max,
                             self.y_max), self.canvas.surf)
 
-        self._draw_grid(qp)
-        self._draw_axis(qp)
-        self._draw_line(qp)
+        self._draw_lines(qp)
 
 
 

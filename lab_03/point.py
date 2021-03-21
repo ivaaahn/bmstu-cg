@@ -9,8 +9,16 @@ import numpy as np
 
 class Point():
     def __init__(self, x: float, y:float):
-        self._x = x
-        self._y = y
+        self._x = self._round(x)
+        self._y = self._round(y)
+
+
+    @staticmethod
+    def _round(num: float) -> int:
+        def _sign(num: float) -> int:
+            return 1 if num > 0 else -1
+
+        return int(num + 0.5 * _sign(num))
 
     @property
     def value(self):
