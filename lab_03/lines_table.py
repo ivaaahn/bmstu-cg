@@ -24,34 +24,33 @@ class LinesTable(QTableWidget):
         logger.debug(f"LinesTable.add({alg, color, coords})")
         logger.debug(f"rowCount() = {self.rowCount()}")
 
-
         curr_row = self.rowCount()
         self.insertRow(curr_row)
 
-        self.setItem(curr_row, Columns.BEGIN.value, QTableWidgetItem(str(coords[0])))
-        self.setItem(curr_row, Columns.END.value, QTableWidgetItem(str(coords[1])))
-        self.setItem(curr_row, Columns.COLOR.value, QTableWidgetItem(str(color)))
+        self.setItem(curr_row, Columns.BEGIN.value,
+                     QTableWidgetItem(str(coords[0])))
+        self.setItem(curr_row, Columns.END.value,
+                     QTableWidgetItem(str(coords[1])))
+        self.setItem(curr_row, Columns.COLOR.value,
+                     QTableWidgetItem(str(color)))
         self.setItem(curr_row, Columns.ALG.value, QTableWidgetItem(str(alg)))
         self.setItem(curr_row, Columns.ID.value, QTableWidgetItem(str(id)))
 
         logger.debug(f"rowCount() = {self.rowCount()}")
 
-
-
     def read_id(self) -> int or None:
         curr_row = self.currentRow()
-        
+
         if curr_row >= 0:
             return int(self.item(curr_row, Columns.ID.value).text())
         else:
             return None
-        
 
     def remove(self):
         # curr_row = self.currentRow()
         # if curr_row >= 0:
 
-        # Можно не проверять, так как айдишник уже проверен 
+        # Можно не проверять, так как айдишник уже проверен
         self.removeRow(self.currentRow())
 
     def remove_all(self):

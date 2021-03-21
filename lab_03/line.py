@@ -1,8 +1,6 @@
-from PyQt5.QtCore import QPoint
 from loguru import logger
 from point import Point
 from enum import Enum
-import typing
 from typing import NoReturn, List
 
 class Algorithm(Enum):
@@ -27,12 +25,16 @@ class Algorithm(Enum):
 
 class Color(Enum):
     BACK = 0
-    MAIN = 1
+    RED = 1
+    BLUE = 2
+    BLACK = 3
 
     def __str__(self) -> str:
         interp = {
             Color.BACK: 'Фоновый',
-            Color.MAIN: 'Красный'
+            Color.RED: 'Красный',
+            Color.BLUE: 'Синий',
+            Color.BLACK: 'Черный'
         }
         return interp[self]
 
@@ -45,7 +47,7 @@ class Line:
         self.need_draw = False
         self._points = self._calc_points()
 
-        logger.info(f"points = {self._points}")
+        logger.info(f"ALG: {self.alg}, points = {self._points}")
 
     @property
     def points(self) -> List[Point]:
@@ -81,7 +83,7 @@ class Line:
     @staticmethod
     def _dda(p_start: Point, p_end: Point) -> List[Point]:
         def _sign(num: float) -> int:
-                return 1 if num > 0 else -1
+            return num if not num else 1 if num > 0 else -1
 
         values: List[Point] = []
 
@@ -90,12 +92,12 @@ class Line:
         dx = (p_end.x - p_start.x) / length
         dy = (p_end.y - p_start.y) / length
 
-        x = int(p_start.x + 0.5 * _sign(dx))
-        y = int(p_start.y + 0.5 * _sign(dy))
+        x = p_start.x + 0.5 * _sign(dx)
+        y = p_start.y + 0.5 * _sign(dy)
 
         i = 1
         while(i <= length):
-            values.append(Point(x, y))
+            values.append(Point(int(x), int(y)))
             x += dx
             y += dy
             i += 1
@@ -103,109 +105,118 @@ class Line:
         return values
 
 
-
     @staticmethod
     def _ibres(p_start: Point, p_end: Point) -> List[Point]:
-        pass
+        def _sign(num: float) -> int:
+                return 1 if num > 0 else -1
+
+        values: List[Point] = []
+        x, y = p_start.x, p_start.y
+        dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
+        x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
+
+        swap = False
+        if dy > dx:
+            dx, dy = dy, dx
+            swap = True
+
+        e = 2*dy - dx
+
+        for _ in range(1, dx+1):
+            values.append(Point(x, y))
+            while (e >= 0):
+                if swap:
+                    x += x_sign
+                else:
+                    y += y_sign
+
+                e -= 2*dx
+            
+            if swap:
+                y += y_sign
+            else:
+                x += x_sign
+
+            e += 2*dy
+
+        return values
 
     @staticmethod
     def _rbres(p_start: Point, p_end: Point) -> List[Point]:
-        pass
+        def _sign(num: float) -> int:
+            return 1 if num > 0 else -1
 
+        values: List[Point] = []
+        x, y = p_start.x, p_start.y
+        dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
+        x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
+
+        swap = False
+        if dy > dx:
+            dx, dy = dy, dx
+            swap = True
+
+        e = dy/dx - 0.5
+
+        for _ in range(1, dx+1):
+            values.append(Point(x, y))
+            while (e >= 0):
+                if swap:
+                    x += x_sign
+                else:
+                    y += y_sign
+
+                e -= 1
+            
+            if swap:
+                y += y_sign
+            else:
+                x += x_sign
+
+            e += dy/dx
+
+        return values
+
+    # TODO
     @staticmethod
     def _bresimp(p_start: Point, p_end: Point) -> List[Point]:
-        pass
+        def _sign(num: float) -> int:
+            return 1 if num > 0 else -1
 
+        values: List[Point] = []
+        x, y = p_start.x, p_start.y
+        dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
+        x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
+
+        swap = False
+        if dy > dx:
+            dx, dy = dy, dx
+            swap = True
+
+        e = dy/dx - 0.5
+
+        for _ in range(1, dx + 1):
+            values.append(Point(x, y))
+            while (e >= 0):
+                if swap:
+                    x += x_sign
+                else:
+                    y += y_sign
+
+                e -= 1
+            
+            if swap:
+                y += y_sign
+            else:
+                x += x_sign
+
+            e += dy/dx
+
+        return values
+
+
+    # TODO
     @staticmethod
     def _wu(p_start: Point, p_end: Point) -> List[Point]:
-        pass
-
-
-
-class DDA:
-    def __init__(self):
-        self._need_draw = False
-        self._values = []
-        
-    @property
-    def values(self) -> list:
-        if not self._need_draw:
-            return []
-        else:
-            if not self._raw_values:
-                self._update_values()
-            return self._values
-
-    def _update_values(self) -> typing.NoReturn:
-        pass
-
-
-class Wu:
-    def __init__(self):
-        self._need_draw = False
-        self._values = []
-    
-    @property
-    def values(self) -> list:
-        if not self._need_draw:
-            return []
-        else:
-            if not self._raw_values:
-                self._update_values()
-            return self._values
-
-    def _update_values(self) -> typing.NoReturn:
-        pass
-
-class RBresenham:
-    def __init__(self):
-        self._need_draw = False
-        self._values = []
-        
-    @property
-    def values(self) -> list:
-        if not self._need_draw:
-            return []
-        else:
-            if not self._raw_values:
-                self._update_values()
-            return self._values
-
-    def _update_values(self) -> typing.NoReturn:
-        pass
-
-
-class IBresenham:
-    def __init__(self):
-        self._need_draw = False
-        self._values = []
-    
-    @property
-    def values(self) -> list:
-        if not self._need_draw:
-            return []
-        else:
-            if not self._raw_values:
-                self._update_values()
-            return self._values
-
-    def _update_values(self) -> typing.NoReturn:
-        pass
-
-class BresenhamImproved:
-    def __init__(self):
-        self._need_draw = False
-        self._values = []
-        
-    @property
-    def values(self) -> list:
-        if not self._need_draw:
-            return []
-        else:
-            if not self._raw_values:
-                self._update_values()
-            return self._values
-
-    def _update_values(self) -> typing.NoReturn:
         pass
 
