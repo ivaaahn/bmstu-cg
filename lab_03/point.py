@@ -2,18 +2,27 @@ from __future__ import division
 
 from PyQt5.QtCore import QPoint
 from loguru import logger
-from typing import overload
+from typing import NoReturn, Tuple
 
 import numpy as np
 
 
 class Point():
-    def __init__(self, x: float, y:float):
+    def __init__(self, x: float, y: float, intens: int = 100):
         self._x = x
         self._y = y
+        self._color_intens = self._round(255 * intens / 100)
+
+    @staticmethod
+    def _round(num: float) -> int:
+        return int(num + (0.5 if num > 0 else -0.5))
 
     @property
-    def value(self):
+    def intensity(self) -> int:
+        return self._color_intens
+
+    @property
+    def value(self) -> Tuple[float]:
         return (self.x, self.y)
 
     @property
@@ -21,7 +30,7 @@ class Point():
         return self._x
 
     @x.setter
-    def x(self, value):
+    def x(self, value) -> NoReturn:
         self._x = value
 
     @property
@@ -32,14 +41,6 @@ class Point():
     def y(self, value):
         self._y = value
 
-    @property
-    def label(self):
-        return self._label
-
-    @label.setter
-    def label(self, value: str):
-        self._label = value
-
     def rounder(func):
         def wrapper(self):
             return round(func(self), 2)
@@ -48,6 +49,9 @@ class Point():
     @rounder
     def pretty_x(self):
         return self._x
+
+    def copy(self):
+        return Point(self._x, self._y, self._color_intens)
 
     @rounder
     def pretty_y(self):

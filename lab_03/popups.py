@@ -8,7 +8,6 @@ from design.task_popup import Ui_TaskPopup
 from design.b_change_popup import Ui_b_change_popup
 from errors import ErrorInput
 from point import Point
-from astroid import Astroid
 
 
 class TaskPopup(QWidget, Ui_TaskPopup):

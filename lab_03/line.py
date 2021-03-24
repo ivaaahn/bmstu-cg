@@ -3,51 +3,21 @@ from point import Point
 from enum import Enum
 from typing import NoReturn, List
 
-class Algorithm(Enum):
-    LIB = 0
-    DDA = 1
-    RB = 2
-    IB = 3
-    BIMP = 4
-    WU = 5
+from color import Color
+from algorithms import AlgType
+from algorithms import Algorithms as Algs
 
-    def __str__(self) -> str:
-        interp = {
-            Algorithm.LIB: 'Библиотечная функция',
-            Algorithm.DDA: 'ЦДА',
-            Algorithm.RB: 'Брезенхем (действит.)',
-            Algorithm.IB: 'Брезенхем (целочисл.)',
-            Algorithm.BIMP: 'Брезенхем (устр. ступ)',
-            Algorithm.WU: 'Ву'
-        }
-        return interp[self]
-
-
-class Color(Enum):
-    BACK = 0
-    RED = 1
-    BLUE = 2
-    BLACK = 3
-
-    def __str__(self) -> str:
-        interp = {
-            Color.BACK: 'Фоновый',
-            Color.RED: 'Красный',
-            Color.BLUE: 'Синий',
-            Color.BLACK: 'Черный'
-        }
-        return interp[self]
 
 class Line:
-    def __init__(self, p_start: Point, p_end: Point, alg: Algorithm, color: Color):
+    def __init__(self, p_start: Point, p_end: Point, alg: AlgType, color: Color):
         self.p_start, self.p_end = p_start, p_end
         self.alg = alg
         self.color = color
 
-        self.need_draw = False
+        # self.need_draw = False
         self._points = self._calc_points()
 
-        logger.info(f"ALG: {self.alg}, points = {self._points}")
+        # logger.info(f"ALG: {self.alg}, points = {self._points}")
 
     @property
     def points(self) -> List[Point]:
@@ -56,167 +26,272 @@ class Line:
     def __repr__(self) -> str:
         return f"Line <{str(self.p_start)}, {str(self.p_end)}, {self.alg}, {self.color}>"
 
-    def show(self):
-        self.need_draw = True
+    # def show(self):
+    #     self.need_draw = True
 
-    def hide(self):
-        self.need_draw = False
+    # def hide(self):
+    #     self.need_draw = False
+
 
     def _calc_points(self) -> List[Point]:
-        method = {
-            Algorithm.LIB   : self._lib,
-            Algorithm.DDA   : self._dda,
-            Algorithm.RB    : self._rbres,
-            Algorithm.IB    : self._ibres,
-            Algorithm.BIMP  : self._bresimp,
-            Algorithm.WU    : self._wu,
-        }
+        curr_alg = Algs.get_alg(self.alg)
+        return curr_alg(self.p_start, self.p_end)
 
-        return method[self.alg](self.p_start, self.p_end)
+    # @staticmethod
+    # def _lib(p_start: Point, p_end: Point) -> None:
+    #     return None
+
+    # @staticmethod
+    # def _dda(p_start: Point, p_end: Point) -> List[Point]:
+    #     def _round(num: float) -> int:
+    #         return int(num + (0.5 if num > 0 else -0.5))
+
+    #     values: List[Point] = []
+
+    #     if p_start == p_end:
+    #         values.append(p_start)
+    #         return values
+
+    #     length = max(abs(p_end.x - p_start.x), abs(p_end.y - p_start.y))
+
+    #     dx = (p_end.x - p_start.x) / length
+    #     dy = (p_end.y - p_start.y) / length
+
+    #     x = p_start.x
+    #     y = p_start.y
+
+    #     for _ in range(1, length + 1):
+    #         values.append(Point(_round(x), _round(y)))
+    #         x += dx
+    #         y += dy
+
+    #     return values
+
+    # @staticmethod
+    # def _ibres(p_start: Point, p_end: Point) -> List[Point]:
+    #     def _sign(num: float) -> int:
+    #         return 1 if num > 0 else -1 if num < 0 else 0
+
+    #     values: List[Point] = []
+
+    #     if p_start == p_end:
+    #         values.append(p_start)
+    #         return values
+
+    #     x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
+    #     dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
+
+    #     swap = False
+    #     if dy > dx:
+    #         dx, dy = dy, dx
+    #         swap = True
+
+    #     err = 2 * dy - dx
+
+    #     x, y = p_start.x, p_start.y
+
+    #     for _ in range(1, dx+1):
+    #         values.append(Point(x, y))
+    #         if err >= 0:
+    #             if swap:
+    #                 x += x_sign
+    #             else:
+    #                 y += y_sign
+
+    #             err -= 2*dx
+
+    #         if err < 0:
+    #             if swap:
+    #                 y += y_sign
+    #             else:
+    #                 x += x_sign
+
+    #         err += 2*dy
+
+    #     return values
+
+    # @staticmethod
+    # def _rbres(p_start: Point, p_end: Point) -> List[Point]:
+    #     def _sign(num: float) -> int:
+    #         return 1 if num > 0 else -1 if num < 0 else 0
+
+    #     values: List[Point] = []
+
+    #     if p_start == p_end:
+    #         values.append(p_start)
+    #         return values
+
+    #     x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
+    #     dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
+
+    #     swap = False
+    #     if dy > dx:
+    #         dx, dy = dy, dx
+    #         swap = True
+
+    #     m = dy/dx
+    #     err = m - 0.5
+    #     x, y = p_start.x, p_start.y
+
+    #     for _ in range(1, dx+1):
+    #         values.append(Point(x, y))
+    #         if err >= 0:
+    #             if swap:
+    #                 x += x_sign
+    #             else:
+    #                 y += y_sign
+
+    #             err -= 1
+
+    #         if err < 0:
+    #             if swap:
+    #                 y += y_sign
+    #             else:
+    #                 x += x_sign
+
+    #         err += m
+
+    #     return values
+
+    # # TODO
+
+    # @staticmethod
+    # def _bresimp(p_start: Point, p_end: Point) -> List[Point]:
+    #     def _sign(num: float) -> int:
+    #         return 1 if num > 0 else -1 if num < 0 else 0
+
+    #     def _round(num: float) -> int:
+    #         return int(num + (0.5 if num > 0 else -0.5))
+
+    #     intens: int = 100
+
+    #     values: List[Point] = []
+
+    #     if p_start == p_end:
+    #         values.append(p_start)
+    #         return values
+
+    #     x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
+    #     dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
+
+    #     swap = False
+    #     if dy > dx:
+    #         dx, dy = dy, dx
+    #         swap = True
+
+    #     m = dy/dx * intens
+    #     err = intens/2
+    #     w = intens - m
+    #     x, y = p_start.x, p_start.y
+
+    #     values.append(Point(x, y, _round(err)))
+
+    #     for _ in range(1, dx):
+    #         if err >= w:
+    #             if swap:
+    #                 x += x_sign
+    #             else:
+    #                 y += y_sign
+
+    #             err -= intens
+
+    #         if err < w:
+    #             if swap:
+    #                 y += y_sign
+    #             else:
+    #                 x += x_sign
+
+    #         err += m 
+
+    #         values.append(Point(x, y, _round(err)))
+    #     return values
+
+    # # !OLD
+
+    # # @staticmethod
+    # # def _wu2(p_begin: Point, p_end: Point) -> List[Point]:
+    # #     def _fpart(x):
+    # #         return x - int(x)
+        
+    # #     def _rfpart(x):
+    # #         return 1 - _fpart(x)
+
+    # #     pb, pe = p_begin, p_end
+
+    # #     print('START:', pb, pe)
 
 
-    @staticmethod
-    def _lib(p_start: Point, p_end: Point) -> None:
-        return None
+    # #     values: List[Point] = []
+        
+    # #     if pb == pe:
+    # #         values.append(pb)
+    # #         return values
+
+    # #     x1, y1 = pb.value
+    # #     x2, y2 = pe.value
+    # #     dx, dy = x2-x1, y2-y1
+    # #     steep = abs(dy) > abs(dx)
+
+    # #     def p_handler(steep, x, y, intens=100) -> Point:
+    # #         res = ((x, y), (y, x))[steep]
+    # #         return Point(res[0], res[1], intens)
+
+    # #     # Делаем так, чтобы итерироваться по прямой слева направо и вдоль иксов было длиннее
+    # #     if steep:
+    # #         x1, y1, x2, y2, dx, dy = y1, x1, y2, x2, dy, dx
+    # #     if x1 > x2:
+    # #         x1, x2, y1, y2 = x2, x1, y2, y1
+    
+    # #     # print(f"pb: ({x1}, {y1}), pe: ({x2}, {y2})")
+
+    # #     m: float = dy/dx
+    # #     next_y: float = y1
+    # #     for x in range(x1, x2+1):
+    # #         y = int(next_y)
+    # #         values.append(p_handler(steep, x, y, 100 *_rfpart(next_y)))
+    # #         values.append(p_handler(steep, x, y+1, 100 *_fpart(next_y)))
+    # #         next_y += m
+
+    # #     return values
 
 
-    @staticmethod
-    def _dda(p_start: Point, p_end: Point) -> List[Point]:
-        def _sign(num: float) -> int:
-            return num if not num else 1 if num > 0 else -1
 
-        values: List[Point] = []
+    # @staticmethod
+    # def _wu(p_begin: Point, p_end: Point) -> List[Point]:
+    #     def _fpart(num):
+    #         return num - int(num)
+        
+    #     def _rfpart(num):
+    #         return 1 - _fpart(num)
 
-        length = max(abs(p_end.x - p_start.x), abs(p_end.y - p_start.y))
+    #     pb, pe = p_begin.copy(), p_end.copy()
+    #     values: List[Point] = []
+        
+    #     if pb == pe:
+    #         values.append(pb)
+    #         return values
 
-        dx = (p_end.x - p_start.x) / length
-        dy = (p_end.y - p_start.y) / length
+    #     dx, dy = pe.x-pb.x, pe.y-pb.y
 
-        x = p_start.x + 0.5 * _sign(dx)
-        y = p_start.y + 0.5 * _sign(dy)
+    #     swapped = False
+    #     if abs(dy) > abs(dx):
+    #         dx, dy = dy, dx
+    #         pb.x, pb.y, pe.x, pe.y, = pb.y, pb.x, pe.y, pe.x 
+    #         swapped = True
+    #     if pb.x > pe.x:
+    #         pb, pe = pe, pb
 
-        i = 1
-        while(i <= length):
-            values.append(Point(int(x), int(y)))
-            x += dx
-            y += dy
-            i += 1
+    #     m: float = dy/dx
+    #     next_y: float = pb.y
+    #     for x in range(pb.x, pe.x+1):
+    #         y = int(next_y)
+    #         if swapped:
+    #             values.append(Point(y, x, 100*_rfpart(next_y)))
+    #             values.append(Point(y+1, x, 100*_fpart(next_y)))
+    #         else:
+    #             values.append(Point(x, y, 100*_rfpart(next_y)))
+    #             values.append(Point(x, y+1, 100*_fpart(next_y)))
 
-        return values
+    #         next_y += m
 
-
-    @staticmethod
-    def _ibres(p_start: Point, p_end: Point) -> List[Point]:
-        def _sign(num: float) -> int:
-                return 1 if num > 0 else -1
-
-        values: List[Point] = []
-        x, y = p_start.x, p_start.y
-        dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
-        x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
-
-        swap = False
-        if dy > dx:
-            dx, dy = dy, dx
-            swap = True
-
-        e = 2*dy - dx
-
-        for _ in range(1, dx+1):
-            values.append(Point(x, y))
-            while (e >= 0):
-                if swap:
-                    x += x_sign
-                else:
-                    y += y_sign
-
-                e -= 2*dx
-            
-            if swap:
-                y += y_sign
-            else:
-                x += x_sign
-
-            e += 2*dy
-
-        return values
-
-    @staticmethod
-    def _rbres(p_start: Point, p_end: Point) -> List[Point]:
-        def _sign(num: float) -> int:
-            return 1 if num > 0 else -1
-
-        values: List[Point] = []
-        x, y = p_start.x, p_start.y
-        dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
-        x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
-
-        swap = False
-        if dy > dx:
-            dx, dy = dy, dx
-            swap = True
-
-        e = dy/dx - 0.5
-
-        for _ in range(1, dx+1):
-            values.append(Point(x, y))
-            while (e >= 0):
-                if swap:
-                    x += x_sign
-                else:
-                    y += y_sign
-
-                e -= 1
-            
-            if swap:
-                y += y_sign
-            else:
-                x += x_sign
-
-            e += dy/dx
-
-        return values
-
-    # TODO
-    @staticmethod
-    def _bresimp(p_start: Point, p_end: Point) -> List[Point]:
-        def _sign(num: float) -> int:
-            return 1 if num > 0 else -1
-
-        values: List[Point] = []
-        x, y = p_start.x, p_start.y
-        dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
-        x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
-
-        swap = False
-        if dy > dx:
-            dx, dy = dy, dx
-            swap = True
-
-        e = dy/dx - 0.5
-
-        for _ in range(1, dx + 1):
-            values.append(Point(x, y))
-            while (e >= 0):
-                if swap:
-                    x += x_sign
-                else:
-                    y += y_sign
-
-                e -= 1
-            
-            if swap:
-                y += y_sign
-            else:
-                x += x_sign
-
-            e += dy/dx
-
-        return values
-
-
-    # TODO
-    @staticmethod
-    def _wu(p_start: Point, p_end: Point) -> List[Point]:
-        pass
-
+    #     return values

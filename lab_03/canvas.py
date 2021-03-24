@@ -5,12 +5,10 @@ from point import Point
 from loguru import logger
 from math import cos, sin
 
+
 import numpy as np
 import typing
-import sys
 
-from astroid import Astroid
-from errors import ScaleInfo
 
 
 class Canvas(QtWidgets.QLabel):

@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
 from typing import NoReturn, Tuple
 from enum import Enum
 
-from line import Algorithm, Color
+from line import AlgType, Color
 from point import Point
 
 from loguru import logger
@@ -20,9 +20,9 @@ class LinesTable(QTableWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def add(self, alg: Algorithm, color: Color, coords: Tuple[Point], id: int) -> NoReturn:
-        logger.debug(f"LinesTable.add({alg, color, coords})")
-        logger.debug(f"rowCount() = {self.rowCount()}")
+    def add(self, alg: AlgType, color: Color, coords: Tuple[Point], id: int) -> NoReturn:
+        # logger.debug(f"LinesTable.add({alg, color, coords})")
+        # logger.debug(f"rowCount() = {self.rowCount()}")
 
         curr_row = self.rowCount()
         self.insertRow(curr_row)
@@ -36,7 +36,7 @@ class LinesTable(QTableWidget):
         self.setItem(curr_row, Columns.ALG.value, QTableWidgetItem(str(alg)))
         self.setItem(curr_row, Columns.ID.value, QTableWidgetItem(str(id)))
 
-        logger.debug(f"rowCount() = {self.rowCount()}")
+        # logger.debug(f"rowCount() = {self.rowCount()}")
 
     def read_id(self) -> int or None:
         curr_row = self.currentRow()
