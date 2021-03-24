@@ -1,11 +1,10 @@
+import time
 import numpy as np
 from math import radians, sin, cos
 from timeit import timeit
 from enum import Enum
 from typing import Dict, List, Tuple
-import time
 
-from loguru import logger
 from point import Point
 
 
@@ -33,7 +32,7 @@ class AlgType(Enum):
         return [AlgType(i) for i in range(len(AlgType))]
 
 
-class testAlgs:
+class AlgsTesting:
     def __init__(self) -> None:
         self.alg_types = AlgType.get_all()[1:]
 
@@ -106,37 +105,24 @@ class Algorithms:
             return values, stairs
 
         length = max(abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y))
-
         along_x = abs(p_end.x - p_begin.x) >= abs(p_end.y - p_begin.y)
-
         dx = (p_end.x - p_begin.x) / length
         dy = (p_end.y - p_begin.y) / length
 
         x, y = p_begin.x, p_begin.y
-
         last = _round(y) if along_x else _round(x)
 
-        if along_x:
-            for _ in range(1, length+1):
-                rx, ry = _round(x), _round(y)
+        for _ in range(1, length+1):
+            rx, ry = _round(x), _round(y)
 
-                if ry != last:
-                    stairs += 1
-                    last = ry
+            # Подсчет количества ступенек
+            if along_x and ry != last:
+                stairs, last = stairs + 1, ry
+            elif not along_x and rx != last:
+                stairs, last = stairs + 1, rx
 
-                values.append(Point(rx, ry))
-                x, y = x+dx, y+dy
-
-        else:
-            for _ in range(1, length+1):
-                rx, ry = _round(x), _round(y)
-
-                if rx != last:
-                    stairs += 1
-                    last = rx
-
-                values.append(Point(rx, ry))
-                x, y = x+dx, y+dy
+            values.append(Point(rx, ry))
+            x, y = x+dx, y+dy
 
         return values, stairs
 
@@ -203,10 +189,10 @@ class Algorithms:
         x_sign, y_sign = _sign(p_end.x - p_begin.x), _sign(p_end.y - p_begin.y)
         dx, dy = abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y)
 
-        swap = False
+        swapped = False
         if dy > dx:
             dx, dy = dy, dx
-            swap = True
+            swapped = True
 
         m = dy/dx
         err = m-0.5
@@ -217,19 +203,18 @@ class Algorithms:
             if err > 0:
                 stairs += 1
 
-                if swap:
+                if swapped:
                     x += x_sign
                 else:
                     y += y_sign
-
+                
                 err = err - 1.0
 
             if err <= 0:
-                if swap:
+                if swapped:
                     y += y_sign
                 else:
                     x += x_sign
-
             err = err + m
             values.append(Point(x, y))
 

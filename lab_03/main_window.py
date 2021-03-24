@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPainter
 from typing import Tuple
 
 from design.main_window_ui import Ui_MainWindow
-from algorithms import AlgType, testAlgs
+from algorithms import AlgType, AlgsTesting
 from plotter import BarPlotter, GraphPlotter
 from errors import ErrorInput
 from drawer import Drawer
@@ -20,7 +20,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.bind_buttons()
 
         self.data = Data()
-        self.testInstance = testAlgs()
+        self.algs_testing = AlgsTesting()
 
     def resizeEvent(self, event) -> None:
         self.canvas.init_sizes = False
@@ -112,11 +112,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.repaint()
 
     def _time_test_handler(self) -> None:
-        data: dict = self.testInstance.time_test()
+        data: dict = self.algs_testing.time_test()
         BarPlotter(data)
 
     def _stairs_test_handler(self) -> None:
-        all_angles, res = self.testInstance.stairs_test()
+        all_angles, res = self.algs_testing.stairs_test()
         GraphPlotter(all_angles, res)
 
     def bind_buttons(self) -> None:
