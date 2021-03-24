@@ -8,13 +8,15 @@ class Color(Enum):
     RED = 1
     BLUE = 2
     BLACK = 3
+    GREEN = 4
 
     def __str__(self) -> str:
         interp = {
             Color.BACK: 'Фоновый',
             Color.RED: 'Красный',
             Color.BLUE: 'Синий',
-            Color.BLACK: 'Черный'
+            Color.BLACK: 'Черный',
+            Color.GREEN: 'Зеленый'
         }
         return interp[self]
 
@@ -23,6 +25,7 @@ class Color(Enum):
             Color.BACK: Qt.white,
             Color.RED: Qt.red,
             Color.BLUE: Qt.blue,
-            Color.BLACK: Qt.black
+            Color.BLACK: Qt.black,
+            Color.GREEN: Qt.green
         }
         return QColor(interp[self])

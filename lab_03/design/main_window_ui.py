@@ -259,6 +259,8 @@ class Ui_MainWindow(object):
         self.color_list.addItem(item)
         item = QtWidgets.QListWidgetItem()
         self.color_list.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.color_list.addItem(item)
         self.color_layout.addWidget(self.color_list)
         self.horizontalLayout.addLayout(self.color_layout)
         self.alg_layout = QtWidgets.QVBoxLayout()
@@ -1916,7 +1918,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.color_list.setCurrentRow(1)
+        self.color_list.setCurrentRow(-1)
         self.alg_list.setCurrentRow(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -1935,6 +1937,8 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Синий"))
         item = self.color_list.item(3)
         item.setText(_translate("MainWindow", "Чёрный"))
+        item = self.color_list.item(4)
+        item.setText(_translate("MainWindow", "Зелёный"))
         self.color_list.setSortingEnabled(__sortingEnabled)
         self.b_label_2.setText(_translate("MainWindow", "Алгоритм"))
         __sortingEnabled = self.alg_list.isSortingEnabled()
