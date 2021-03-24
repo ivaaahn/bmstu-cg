@@ -1,7 +1,6 @@
 from __future__ import division
 
 from PyQt5.QtCore import QPoint
-from loguru import logger
 from typing import NoReturn, Tuple
 
 import numpy as np

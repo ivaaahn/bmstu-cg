@@ -20,10 +20,7 @@ class LinesTable(QTableWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def add(self, alg: AlgType, color: Color, coords: Tuple[Point], id: int) -> NoReturn:
-        # logger.debug(f"LinesTable.add({alg, color, coords})")
-        # logger.debug(f"rowCount() = {self.rowCount()}")
-
+    def add(self, alg: AlgType, color: Color, coords: Tuple[Point], id: int) -> None:
         curr_row = self.rowCount()
         self.insertRow(curr_row)
 
@@ -36,8 +33,6 @@ class LinesTable(QTableWidget):
         self.setItem(curr_row, Columns.ALG.value, QTableWidgetItem(str(alg)))
         self.setItem(curr_row, Columns.ID.value, QTableWidgetItem(str(id)))
 
-        # logger.debug(f"rowCount() = {self.rowCount()}")
-
     def read_id(self) -> int or None:
         curr_row = self.currentRow()
 
@@ -46,12 +41,9 @@ class LinesTable(QTableWidget):
         else:
             return None
 
-    def remove(self):
-        # curr_row = self.currentRow()
-        # if curr_row >= 0:
-
-        # Можно не проверять, так как айдишник уже проверен
+    def rm_current_line(self) -> None:
+        # !Можно не проверять, так как айдишник уже проверен
         self.removeRow(self.currentRow())
 
-    def remove_all(self):
+    def remove_all(self) -> None:
         self.setRowCount(0)
