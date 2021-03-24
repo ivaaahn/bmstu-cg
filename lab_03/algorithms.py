@@ -37,7 +37,7 @@ class testAlgs:
 
 
     def time_test(self) -> dict:
-        count = 5000
+        count = 1000
         p_start = Point(321, 135)
         p_end = Point(789, 849)
         res = {}
@@ -46,8 +46,6 @@ class testAlgs:
             alg = Algorithms.get_alg(alg_type)
             res[alg_type] = timeit(lambda: alg(p_start, p_end), number=count) / count * 1000
             
-            # print(f'{alg_type} : {round(res * 1000, 5)} ms')
-
         return res
 
     def stairs_test(self) -> Tuple[Tuple, Dict]:
@@ -117,12 +115,13 @@ class Algorithms:
                     stairs += 1
                     last = ry
 
-                values.append(Point(x, y))
+                values.append(Point(rx, ry))
                 x, y = x+dx, y+dy
 
         else:
             for _ in range(1, length+1):
                 rx, ry = _round(x), _round(y)
+
                 if rx != last:
                     stairs += 1
                     last = rx
@@ -148,6 +147,7 @@ class Algorithms:
 
         values: List[Point] = []
         stairs: int = 0
+        new_stair = 0
 
         if p_start == p_end:
             values.append(p_start)
@@ -156,34 +156,36 @@ class Algorithms:
         x_sign, y_sign = _sign(p_end.x - p_start.x), _sign(p_end.y - p_start.y)
         dx, dy = abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)
 
-        swap = False
+        swapped = False
         if dy > dx:
             dx, dy = dy, dx
-            swap = True
+            swapped = True
 
         err = int(2*dy-dx)
 
         ddx, ddy = int(2*dx), int(2*dy)
         x, y = p_start.x, p_start.y
 
-        for _ in range(1, dx+1):
-            values.append(Point(x, y))
-            if err >= 0:
+
+        values.append(Point(x, y))
+        for _ in range(1, dx):
+            if err > 0:
                 stairs += 1
-                if swap:
+                if swapped:
                     x += x_sign
                 else:
                     y += y_sign
 
-                err = err - ddx
+                err -= ddx
 
-            if err < 0:
-                if swap:
+            if err <= 0:
+                if swapped:
                     y += y_sign
                 else:
                     x += x_sign
 
-            err = err + ddy
+            err += ddy
+            values.append(Point(x, y))
 
         return values, stairs
 
@@ -195,6 +197,7 @@ class Algorithms:
 
         values: List[Point] = []
         stairs: int = 0
+        new_stair = 0
 
         if p_start == p_end:
             values.append(p_start)
@@ -212,10 +215,11 @@ class Algorithms:
         err = m-0.5
         x, y = p_start.x, p_start.y
 
-        for _ in range(1, dx+1):
-            values.append(Point(x, y))
-            if err >= 0:
+        values.append(Point(x, y))
+        for _ in range(1, dx):
+            if err > 0:
                 stairs += 1
+
                 if swap:
                     x += x_sign
                 else:
@@ -223,13 +227,14 @@ class Algorithms:
 
                 err = err - 1.0
 
-            if err < 0:
+            if err <= 0:
                 if swap:
                     y += y_sign
                 else:
                     x += x_sign
 
             err = err + m
+            values.append(Point(x, y))
 
         return values, stairs
 
@@ -266,6 +271,8 @@ class Algorithms:
         values.append(Point(x, y, _round(err)))
 
         for _ in range(1, dx):
+            print(_round(err))
+
             if err >= w:
                 stairs += 1
 
@@ -324,8 +331,6 @@ class Algorithms:
                 last_y = y
 
 
-            # logger.debug(f'{last_y}, {y}, {x == pe.x}')
-# 
             if swapped:
                 values.append(Point(y, x, 100*_rfpart(next_y)))
                 values.append(Point(y+1, x, 100*_fpart(next_y)))
