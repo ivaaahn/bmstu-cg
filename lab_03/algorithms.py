@@ -1,12 +1,12 @@
+import numpy as np
+from math import radians, sin, cos
 from timeit import timeit
 from enum import Enum
-from typing import List
+from typing import Dict, List, Tuple
 import time
-from numpy import float64, int64, double
 
+from loguru import logger
 from point import Point
-
-COUNT = 5000
 
 class AlgType(Enum):
     LIB = 0
@@ -33,44 +33,36 @@ class AlgType(Enum):
 
 class testAlgs:
     def __init__(self) -> None:
-        self.count = COUNT
-        self.p_start = Point(321, 135)
-        self.p_end = Point(789, 849)
+        self.alg_types = AlgType.get_all()[1:6]
 
 
-    def start_test(self) -> dict:
-        alg_types = AlgType.get_all()[1:]
-        # alg_types = [AlgType(2), AlgType(3)]
-        
+    def time_test(self) -> dict:
+        count = 5000
+        p_start = Point(321, 135)
+        p_end = Point(789, 849)
         res = {}
 
-        for alg_type in alg_types:
+        for alg_type in self.alg_types:
             alg = Algorithms.get_alg(alg_type)
-            res[alg_type] = timeit(lambda: alg(self.p_start, self.p_end), number=self.count) / self.count * 1000
+            res[alg_type] = timeit(lambda: alg(p_start, p_end), number=count) / count * 1000
             
             # print(f'{alg_type} : {round(res * 1000, 5)} ms')
 
         return res
 
-#   # TODO
-#     def start_test(self, center: Point):
-#         algs = [AlgType(i) for i in range(1, len(AlgType))]
+    def stairs_test(self) -> Tuple[Tuple, Dict]:
+        length = 100
+        start_point: Point = Point(length, 0)
+        all_angles: Tuple[int] = tuple(range(0, 91, 1))
+        p_ends: List[Point] = [Algorithms.rotate_point(start_point, radians(angle)) for angle in all_angles]
+        center: Point = Point(0,0)
 
-#         START_ANGLE, END_ANGLE, STEP = 0, 360, 30
-#         START_LEN, END_LEN, STEP = 10, 500, 10 
-#         all_angles = range(START_ANGLE, END_ANGLE, STEP)
-#         all_lens = range(START_LEN, END_LEN, STEP)
+        res = {}
+        for alg_type in self.alg_types:
+            alg = Algorithms.get_alg(alg_type)
+            res[alg_type] = [alg(center, center+point)[1] for point in p_ends] # stairs
 
-#         # LEN = 500
-#         # ANGLE = 30
-
-#         for length in all_lens:
-#             start_point = Point(length, 0)
-#             p_ends: List[Point] = [self._rotate_point(start_point, radians(angle)) for angle in all_angles]
-#             spectrum: List[Line] = [Line(offset, offset+point, alg, color) for point in p_ends]
-
-
-
+        return all_angles, res
 
 
 class Algorithms:
@@ -90,7 +82,7 @@ class Algorithms:
 
     @staticmethod
     def _lib(p_start: Point, p_end: Point) -> None:
-        return None
+        return None, 0
 
 
     @staticmethod
@@ -105,28 +97,49 @@ class Algorithms:
             values.append(p_start)
             return values
 
-        length = int(max(abs(p_end.x - p_start.x), abs(p_end.y - p_start.y)))
+        length = max(abs(p_end.x - p_start.x), abs(p_end.y - p_start.y))
+
+        along_x = abs(p_end.x - p_start.x) >= abs(p_end.y - p_start.y)
+
 
         dx = (p_end.x - p_start.x) / length
         dy = (p_end.y - p_start.y) / length
 
-        x = p_start.x
-        y = p_start.y
+        x, y = p_start.x, p_start.y
+        
+        last = _round(y) if along_x else _round(x)
 
-        for _ in range(1, length + 1):
-            values.append(Point(_round(x), _round(y)))
-            x += dx
-            y += dy
+        if along_x:
+            for _ in range(1, length+1):
+                rx, ry = _round(x), _round(y)
 
-        return values
+                if ry != last:
+                    stairs += 1
+                    last = ry
+
+                values.append(Point(x, y))
+                x, y = x+dx, y+dy
+
+        else:
+            for _ in range(1, length+1):
+                rx, ry = _round(x), _round(y)
+                if rx != last:
+                    stairs += 1
+                    last = rx
+
+                values.append(Point(rx, ry))
+                x, y = x+dx, y+dy
+
+
+        return values, stairs
 
     def wait(secs):
-     def decorator(func):
-         def wrapper(*args, **kwargs):
-             time.sleep(secs)
-             return func(*args, **kwargs)
-         return wrapper
-     return decorator
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                time.sleep(secs)
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
 
     @staticmethod
     def _ibres(p_start: Point, p_end: Point) -> List[Point]:
@@ -134,6 +147,7 @@ class Algorithms:
             return 1 if num > 0 else -1 if num < 0 else 0
 
         values: List[Point] = []
+        stairs: int = 0
 
         if p_start == p_end:
             values.append(p_start)
@@ -155,6 +169,7 @@ class Algorithms:
         for _ in range(1, dx+1):
             values.append(Point(x, y))
             if err >= 0:
+                stairs += 1
                 if swap:
                     x += x_sign
                 else:
@@ -170,7 +185,7 @@ class Algorithms:
 
             err = err + ddy
 
-        return values
+        return values, stairs
 
     @staticmethod
     @wait(1e-16)
@@ -179,6 +194,7 @@ class Algorithms:
             return 1 if num > 0 else -1 if num < 0 else 0
 
         values: List[Point] = []
+        stairs: int = 0
 
         if p_start == p_end:
             values.append(p_start)
@@ -199,6 +215,7 @@ class Algorithms:
         for _ in range(1, dx+1):
             values.append(Point(x, y))
             if err >= 0:
+                stairs += 1
                 if swap:
                     x += x_sign
                 else:
@@ -214,7 +231,7 @@ class Algorithms:
 
             err = err + m
 
-        return values
+        return values, stairs
 
     @staticmethod
     def _bresimp(p_start: Point, p_end: Point) -> List[Point]:
@@ -227,6 +244,7 @@ class Algorithms:
         intens = 100
 
         values: List[Point] = []
+        stairs: int = 0
 
         if p_start == p_end:
             values.append(p_start)
@@ -249,6 +267,8 @@ class Algorithms:
 
         for _ in range(1, dx):
             if err >= w:
+                stairs += 1
+
                 if swap:
                     x += x_sign
                 else:
@@ -263,9 +283,9 @@ class Algorithms:
                     x += x_sign
 
             err += m 
-
             values.append(Point(x, y, _round(err)))
-        return values
+
+        return values, stairs
 
     @staticmethod
     def _wu(p_begin: Point, p_end: Point) -> List[Point]:
@@ -277,6 +297,7 @@ class Algorithms:
 
         pb, pe = p_begin.copy(), p_end.copy()
         values: List[Point] = []
+        stairs: int = 0
         
         if pb == pe:
             values.append(pb)
@@ -287,15 +308,24 @@ class Algorithms:
         swapped = False
         if abs(dy) > abs(dx):
             dx, dy = dy, dx
-            pb.x, pb.y, pe.x, pe.y, = pb.y, pb.x, pe.y, pe.x 
+            pb.x, pb.y, pe.x, pe.y = pb.y, pb.x, pe.y, pe.x 
             swapped = True
         if pb.x > pe.x:
             pb, pe = pe, pb
 
         m = dy/dx
-        next_y = pb.y
+        last_y = next_y = pb.y
         for x in range(pb.x, pe.x+1):
+
             y = int(next_y)
+
+            if y > last_y:
+                stairs += 1
+                last_y = y
+
+
+            # logger.debug(f'{last_y}, {y}, {x == pe.x}')
+# 
             if swapped:
                 values.append(Point(y, x, 100*_rfpart(next_y)))
                 values.append(Point(y+1, x, 100*_fpart(next_y)))
@@ -305,8 +335,17 @@ class Algorithms:
 
             next_y += m
 
-        return values
+        return values, stairs
 
+
+    @staticmethod
+    def rotate_point(point: Point, angle: float) -> Point:
+        mtrx = np.array([[cos(angle),   sin(angle),    0],
+                        [-sin(angle),   cos(angle),    0],
+                        [0,              0,            1]])
+
+        res = point.to_ndarray() @ mtrx
+        return Point(int(res[0]), int(res[1]))
 
     # @staticmethod
     # def _dda(p_start: Point, p_end: Point) -> List[Point]:

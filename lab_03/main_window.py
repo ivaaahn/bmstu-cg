@@ -18,7 +18,7 @@ from color import Color
 from algorithms import AlgType
 from data import Data
 from algorithms import testAlgs
-from plotter import Plotter
+from plotter import BarPlotter, GraphPlotter
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -27,6 +27,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.data = Data()
         self.bindButtons()
+        self.testInstance = testAlgs()
 
     def resizeEvent(self, event) -> NoReturn:
         self.canvas.init_sizes = False
@@ -125,9 +126,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.repaint()
 
     def _time_handler(self):
-        test = testAlgs()
-        data: dict = test.start_test()
-        plot = Plotter(data)
+        data: dict = self.testInstance.time_test()
+        BarPlotter(data)
+
+
+    def _stairs_handler(self):
+        all_angles, res = self.testInstance.stairs_test()
+        GraphPlotter(all_angles, res)
+        
+        
 
 
     def bindButtons(self):
@@ -138,6 +145,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.build_spectrum_btn.clicked.connect(self._add_spectrum_handler)
         self.clear_spectrum_btn.clicked.connect(self._remove_all_spectrums)
         self.time_btn.clicked.connect(self._time_handler)
+        self.stairs_btn.clicked.connect(self._stairs_handler)
 
 
     def closeEvent(self, event):

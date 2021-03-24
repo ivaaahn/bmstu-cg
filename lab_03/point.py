@@ -8,9 +8,9 @@ import numpy as np
 
 
 class Point():
-    def __init__(self, x: float, y: float, intens: int = 100):
-        self._x = x
-        self._y = y
+    def __init__(self, x: int, y: int, intens: int = 100):
+        self._x: int = x
+        self._y: int = y
         self._color_intens = self._round(255 * intens / 100)
 
     @staticmethod

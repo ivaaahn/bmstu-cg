@@ -6,7 +6,10 @@ from loguru import logger
 from math import cos, pi, sin, radians
 import numpy as np
 
-from line import Line, AlgType, Color
+from line import Line
+from algorithms import AlgType
+from algorithms import Algorithms as algs
+from color import Color
 from point import Point
 
 
@@ -31,9 +34,6 @@ class Data:
         return list(self._lines.values())
 
 
-  
-        
-
     def add_line(self, alg: AlgType, color: Color, coords: Tuple[Point], line_id: int) -> NoReturn:
         self._lines[line_id] = Line(coords[0], coords[1], alg, color)
 
@@ -45,19 +45,13 @@ class Data:
         self._lines.clear()
         self.line_ids = [_ for _ in range(100)]
         
-    def _rotate_point(self, point: Point, angle: float) -> Point:
-        mtrx = np.array([[cos(angle),   sin(angle),    0],
-                        [-sin(angle),   cos(angle),    0],
-                        [0,              0,            1]])
 
-        res = point.to_ndarray() @ mtrx
-        return Point(int(res[0]), int(res[1]))
 
     def add_spectrum(self, offset: Point, step: float, length: int, angles: Tuple[float], alg: AlgType, color: Color) -> NoReturn:
         start_point = Point(length, 0)
         all_angles = np.arange(angles[0], angles[1] + 1, step)
         
-        p_ends: List[Point] = [self._rotate_point(start_point, radians(angle)) for angle in all_angles]
+        p_ends: List[Point] = [algs.rotate_point(start_point, radians(angle)) for angle in all_angles]
         spectrum: List[Line] = [Line(offset, offset+point, alg, color) for point in p_ends]
         self.spectrums.append(spectrum)
 

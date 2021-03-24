@@ -1,7 +1,8 @@
+from typing import List, Tuple
 import matplotlib.pyplot as plt
 
 
-class Plotter:
+class BarPlotter:
     def __init__(self, data: dict) -> None:
         self._names = [str(alg)[:10]+'\n'+str(alg)[10:] for alg in data.keys()]
         self._values = [round(value, 2) for value in data.values()]
@@ -18,3 +19,22 @@ class Plotter:
             tick.label.set_fontsize(14)      
 
         plt.show()
+
+class GraphPlotter:
+    def __init__(self, all_angles: Tuple[int], data: dict) -> None:
+        self._all_angles: Tuple = all_angles
+        self._data = data
+
+        plt.xlabel('Угол', fontsize=12, color='blue')
+        plt.ylabel('Кол-во ступенек', fontsize=12, color='blue')
+
+
+        for alg, stairs in data.items():
+            plt.plot(self._all_angles, stairs, label=alg)
+
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
+
+

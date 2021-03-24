@@ -1,7 +1,7 @@
 from loguru import logger
 from point import Point
 from enum import Enum
-from typing import NoReturn, List
+from typing import NoReturn, List, Tuple
 
 from color import Color
 from algorithms import AlgType
@@ -15,7 +15,8 @@ class Line:
         self.color = color
 
         # self.need_draw = False
-        self._points = self._calc_points()
+        self._points, self._stairs = self._start_alg()
+        # print(self._stairs)
 
         # logger.info(f"ALG: {self.alg}, points = {self._points}")
 
@@ -33,7 +34,7 @@ class Line:
     #     self.need_draw = False
 
 
-    def _calc_points(self) -> List[Point]:
+    def _start_alg(self) -> Tuple[List[Point], int]:
         curr_alg = Algs.get_alg(self.alg)
         return curr_alg(self.p_start, self.p_end)
 
