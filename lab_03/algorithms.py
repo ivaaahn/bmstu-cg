@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from math import radians, sin, cos
+from math import ceil, radians, sin, cos
 from timeit import timeit
 from enum import Enum
 from typing import Dict, List, Tuple
@@ -50,9 +50,9 @@ class AlgsTesting:
         return res
 
     def stairs_test(self) -> Tuple[Tuple, Dict]:
-        length = 100
+        length = 50
         start_point: Point = Point(length, 0)
-        all_angles: Tuple[int] = tuple(range(0, 91, 1))
+        all_angles: Tuple[int] = tuple(range(0, 91, 5))
         p_ends: List[Point] = [Algorithms.rotate_point(
             start_point, radians(angle)) for angle in all_angles]
         center: Point = Point(0, 0)
@@ -105,25 +105,30 @@ class Algorithms:
             return values, stairs
 
         length = max(abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y))
-        along_x = abs(p_end.x - p_begin.x) >= abs(p_end.y - p_begin.y)
         dx = (p_end.x - p_begin.x) / length
         dy = (p_end.y - p_begin.y) / length
 
-        x, y = p_begin.x, p_begin.y
-        last = _round(y) if along_x else _round(x)
 
-        for _ in range(1, length+1):
-            rx, ry = _round(x), _round(y)
+        curr_x, curr_y = p_begin.x, p_begin.y
+        tmp_x, tmp_y = curr_x, curr_y
 
-            # Подсчет количества ступенек
-            if along_x and ry != last:
-                stairs, last = stairs + 1, ry
-            elif not along_x and rx != last:
-                stairs, last = stairs + 1, rx
+        for _ in range(1, length+2):
 
-            values.append(Point(rx, ry))
-            x, y = x+dx, y+dy
+            values.append(Point(tmp_x, tmp_y))
+            curr_x += dx
+            curr_y += dy
 
+            rx, ry = _round(curr_x), _round(curr_y)
+            if tmp_x != rx and tmp_y != ry:
+                stairs += 1
+                stairs_flag = True
+            else: 
+                stairs_flag = False
+
+            tmp_x, tmp_y = rx, ry
+
+        if stairs_flag:
+            stairs -= 1
         return values, stairs
 
     @staticmethod
@@ -147,29 +152,37 @@ class Algorithms:
             swapped = True
 
         err = int(2*dy-dx)
-
         ddx, ddy = int(2*dx), int(2*dy)
-        x, y = p_begin.x, p_begin.y
+        curr_x, curr_y = p_begin.x, p_begin.y
 
-        values.append(Point(x, y))
-        for _ in range(1, dx):
-            if err > 0:
-                stairs += 1
+        for _ in range(1, dx+2):
+            tmp_x, tmp_y = curr_x, curr_y
+            values.append(Point(curr_x, curr_y))
+            
+            if err >= 0:
                 if swapped:
-                    x += x_sign
+                    curr_x += x_sign
                 else:
-                    y += y_sign
+                    curr_y += y_sign
 
                 err -= ddx
 
-            if err <= 0:
+            if err < 0:
                 if swapped:
-                    y += y_sign
+                    curr_y += y_sign
                 else:
-                    x += x_sign
+                    curr_x += x_sign
 
             err += ddy
-            values.append(Point(x, y))
+
+            if tmp_x != curr_x and tmp_y != curr_y:
+                stairs += 1
+                stairs_flag = True
+            else:
+                stairs_flag = False
+
+        if stairs_flag:
+            stairs -= 1
 
         return values, stairs
 
@@ -196,27 +209,34 @@ class Algorithms:
 
         m = dy/dx
         err = m-0.5
-        x, y = p_begin.x, p_begin.y
 
-        values.append(Point(x, y))
-        for _ in range(1, dx):
-            if err > 0:
-                stairs += 1
+        curr_x, curr_y = p_begin.x, p_begin.y
+        for _ in range(1, dx+2):
+            tmp_x, tmp_y = curr_x, curr_y
+            values.append(Point(curr_x, curr_y))
 
+            if err >= 0:
                 if swapped:
-                    x += x_sign
+                    curr_x += x_sign
                 else:
-                    y += y_sign
+                    curr_y += y_sign
                 
-                err = err - 1.0
+                err -= 1.0
 
-            if err <= 0:
+            if err < 0:
                 if swapped:
-                    y += y_sign
+                    curr_y += y_sign
                 else:
-                    x += x_sign
-            err = err + m
-            values.append(Point(x, y))
+                    curr_x += x_sign
+            err += m
+
+            if tmp_x != curr_x and tmp_y != curr_y:
+                stairs, stairs_flag = stairs + 1, True
+            else:
+                stairs_flag = False
+
+        if stairs_flag:
+            stairs -= 1
 
         return values, stairs
 
@@ -240,37 +260,43 @@ class Algorithms:
         x_sign, y_sign = _sign(p_end.x - p_begin.x), _sign(p_end.y - p_begin.y)
         dx, dy = abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y)
 
-        swap = False
+        swapped = False
         if dy > dx:
             dx, dy = dy, dx
-            swap = True
+            swapped = True
 
         m = dy/dx * intens
         err = intens/2
         w = intens - m
-        x, y = p_begin.x, p_begin.y
 
-        values.append(Point(x, y, _round(err)))
+        curr_x, curr_y = p_begin.x, p_begin.y
 
-        for _ in range(1, dx):
+        for _ in range(1, dx+2):
+            tmp_x, tmp_y = curr_x, curr_y
+            values.append(Point(curr_x, curr_y, _round(err)))
             if err >= w:
-                stairs += 1
-
-                if swap:
-                    x += x_sign
+                if swapped:
+                    curr_x += x_sign
                 else:
-                    y += y_sign
+                    curr_y += y_sign
 
                 err -= intens
 
             if err < w:
-                if swap:
-                    y += y_sign
+                if swapped:
+                    curr_y += y_sign
                 else:
-                    x += x_sign
+                    curr_x += x_sign
 
             err += m
-            values.append(Point(x, y, _round(err)))
+
+            if tmp_x != curr_x and tmp_y != curr_y:
+                stairs, stairs_flag = stairs + 1, True
+            else:
+                stairs_flag = False
+
+        if stairs_flag:
+            stairs -= 1
 
         return values, stairs
 
@@ -300,24 +326,29 @@ class Algorithms:
         if pb.x > pe.x:
             pb, pe = pe, pb
 
+
         m = dy/dx
-        last_y = next_y = pb.y
+
+        y_accum = float(pb.y)
         for x in range(pb.x, pe.x+1):
-
-            y = int(next_y)
-
-            if y > last_y:
-                stairs += 1
-                last_y = y
+            last_y = y = int(y_accum)
 
             if swapped:
-                values.append(Point(y, x, 100*_rfpart(next_y)))
-                values.append(Point(y+1, x, 100*_fpart(next_y)))
+                values.append(Point(y, x, 100*_rfpart(y_accum)))
+                values.append(Point(y+1, x, 100*_fpart(y_accum)))
             else:
-                values.append(Point(x, y, 100*_rfpart(next_y)))
-                values.append(Point(x, y+1, 100*_fpart(next_y)))
+                values.append(Point(x, y, 100*_rfpart(y_accum)))
+                values.append(Point(x, y+1, 100*_fpart(y_accum)))
 
-            next_y += m
+            y_accum += m
+            
+            if last_y != int(y_accum):
+                stairs, stairs_flag = stairs + 1, True
+            else:
+                stairs_flag = False
+
+        if stairs_flag:
+            stairs -= 1
 
         return values, stairs
 

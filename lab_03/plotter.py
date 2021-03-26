@@ -24,7 +24,7 @@ class GraphPlotter:
         self._all_angles: Tuple = all_angles
         self._data = data
 
-        plt.title("Сравнение кол-ва ступенек")
+        plt.title("Сравнение кол-ва ступенек (длина отрезка = 50)")
         plt.xlabel('Угол (в градусах)', fontsize=12, color='blue')
         plt.ylabel('Кол-во ступенек', fontsize=12, color='red')
 
