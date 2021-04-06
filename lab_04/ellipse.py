@@ -12,7 +12,8 @@ class Ellipse:
         self._ry: int = ry
         self._way: Way = way
         self._color: Color = color
-        self._points: Union[List[Point], None] = self._calculate()
+        self._points: Union[List[Point], None] = []
+        self._calculate_points()
 
     @property
     def color(self) -> Color:
@@ -21,7 +22,7 @@ class Ellipse:
     @property
     def rx(self) -> int:
         return self._rx
-    
+
     @property
     def ry(self) -> int:
         return self._ry
@@ -34,7 +35,7 @@ class Ellipse:
     def center(self) -> Point:
         return self._center
 
-    @property   
+    @property
     def points(self) -> Union[List[Point], None]:
         return self._points
 
@@ -42,5 +43,5 @@ class Ellipse:
         return f'Ellipse <({str(self._center)}, {self._rx}, {self._ry}), way: {str(self.way)}, color: {str(self.color)}>'
 
     #TODO
-    def _calculate(self) -> Union[List[Point], None]:
+    def _calculate_points(self):
         pass
