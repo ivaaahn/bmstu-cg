@@ -7,18 +7,13 @@ import numpy as np
 
 
 class Point():
-    def __init__(self, x: int, y: int, intens: int = 100):
+    def __init__(self, x: int, y: int):
         self._x: int = x
         self._y: int = y
-        self._color_intens = self._round(255 * intens / 100)
 
     @staticmethod
     def _round(num: float) -> int:
         return int(num + (0.5 if num > 0 else -0.5))
-
-    @property
-    def intensity(self) -> int:
-        return self._color_intens
 
     @property
     def value(self) -> Tuple[float]:
