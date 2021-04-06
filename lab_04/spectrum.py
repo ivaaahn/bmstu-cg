@@ -1,15 +1,14 @@
-from typing import List, Union
-from numpy import linspace
+from typing import List
 
-from point import Point
 from way import Way
+from point import Point
 from color import Color
 from figure import Figure
 from ellipse import Ellipse
 
 
 class Spectrum:
-    def __init__(self, figure: Figure, way: Way, color: Color, center: int,
+    def __init__(self, figure: Figure, way: Way, color: Color, center: Point,
                  rx_start: int, ry_start: int, step: int, count: int) -> None:
         self._figure_type: Figure = figure
         self._step: int = step
@@ -19,7 +18,9 @@ class Spectrum:
         self._count: int = count
         self._rx_start: int = rx_start
         self._ry_start: int = ry_start
-        self._ellipses: List[Ellipse] = self._calculate()
+        self._ellipses: List[Ellipse] = []
+
+        self._generate_ellipses()
 
     @property
     def figure_type(self) -> Figure:
@@ -57,12 +58,13 @@ class Spectrum:
     def way(self) -> Way:
         return self._way
 
-    # TODO
-    def _calculate(self) -> List[Ellipse]:
-        r_end = self.rx_start + self.count * self.step
-        new_spectrum: List[Ellipse] = []
+    def _generate_ellipses(self) -> None:
+        def _round(num: float) -> int:
+            return int(num + (0.5 if num >= 0 else -0.5))
 
-        for r in range(self.rx_start, r_end+1, self.step):
-            new_spectrum.append(Ellipse(self.center, r, r, self.way, self.color))
+        rx_end: int = self.rx_start + self.count * self.step
+        ratio: float = self.ry_start / self.rx_start
 
-        return new_spectrum
+        for rx in range(self.rx_start, rx_end+1, self.step):
+            self.ellipses.append(
+                Ellipse(self.center, rx, _round(rx*ratio), self.way, self.color))
