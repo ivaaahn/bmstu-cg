@@ -2,13 +2,12 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 from PyQt5.QtCore import QRect
 from PyQt5.QtGui import QPainter
-from typing import Tuple, NamedTuple
+from typing import NamedTuple, Dict, Callable, List
 from collections import namedtuple
 
 from design.main_window_ui import Ui_MainWindow
 from algorithms import AlgsTesting
 from plotter import BarPlotter, GraphPlotter
-from errors import ErrorInput
 from drawer import Drawer
 from point import Point
 from color import Color
@@ -23,10 +22,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
-        self.bind_buttons()
+        self._data = Data()
+        self._algs_testing = AlgsTesting()
 
-        self.data = Data()
-        self.algs_testing = AlgsTesting()
+        self.bind_buttons()
 
     def resizeEvent(self, event) -> None:
         self.canvas.init_sizes = False
@@ -48,10 +47,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return self.r_input.value()
 
     def _read_rx(self) -> int:
-        return self.a_input.value()
+        return self.rx_input.value()
 
     def _read_ry(self) -> int:
-        return self.b_input.value()
+        return self.ry_input.value()
 
     def _read_r_start(self) -> int:
         return self.r_start_input.value()
@@ -82,13 +81,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         count: int = self._read_count()
 
         if cp.ftype is Figure.CIRCLE:
-            r_start: int = self._read_r()
+            r_start: int = self._read_r_start()
             rx_start, ry_start = r_start, r_start
         else:
             rx_start: int = self._read_rx_start()
             ry_start: int = self._read_ry_start()
 
-        self.data.add_spectrum(Spectrum(
+        self._data.add_spectrum(Spectrum(
             cp.ftype, cp.way, cp.color, cp.center, rx_start, ry_start, step, count))
         self.repaint()
 
@@ -102,25 +101,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             rx: int = self._read_rx()
             ry: int = self._read_ry()
 
-        self.data.add_ellipse(Ellipse(cp.center, rx, ry, cp.way, cp.color))
+        self._data.add_ellipse(Ellipse(cp.center, rx, ry, cp.way, cp.color))
         self.repaint()
 
     def _clear_handler(self) -> None:
-        self.data.clear_all()
+        self._data.clear_all()
         self.repaint()
 
-    def _time_test_handler(self) -> None:
-        data: dict = self.algs_testing.time_test()
-        BarPlotter(data)
+    def _time_test_circle_handler(self) -> None:
+        test_result: Dict[Callable[[Point, int], List[Point]],
+                          float] = self._algs_testing.time_circle_test()
 
-    def _stairs_test_handler(self) -> None:
-        all_angles, res = self.algs_testing.stairs_test()
-        GraphPlotter(all_angles, res)
+        # TODO добавить вывод инфографики
+        for key, value in test_result.items():
+            print(f'{key} : {value}')
+        # print(test_result)
+
+    def _time_test_ellipse_handler(self) -> None:
+        test_result: Dict[Callable[[Point, int], List[Point]],
+                          float] = self._algs_testing.time_ellipse_test()
+
+        # TODO добавить вывод инфографики
+        for key, value in test_result.items():
+            print(f'{key} : {value}')
+        # print(test_result)
 
     def bind_buttons(self) -> None:
         self.draw_figure_btn.clicked.connect(self._draw_figure_handler)
         self.draw_spectrum_btn.clicked.connect(self._draw_spectrum_handler)
         self.clear_btn.clicked.connect(self._clear_handler)
+        self.cmp_circle_btn.clicked.connect(self._time_test_circle_handler)
+        self.cmp_ellipse_btn.clicked.connect(self._time_test_ellipse_handler)
+
         self.figure_list.currentIndexChanged.connect(self._fig_changed)
         self._fig_changed(None)
 
@@ -158,5 +170,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         qp.drawPixmap(QRect(self.canvas.x_min, self.canvas.y_min, self.canvas.x_max,
                             self.canvas.y_max), self.canvas.surf)
         drawer = Drawer(qp)
-        drawer.draw_ellipses(self.data.ellipses)
-        drawer.draw_spectrums(self.data.spectrums)
+        drawer.draw_ellipses(self._data.ellipses)
+        drawer.draw_spectrums(self._data.spectrums)
