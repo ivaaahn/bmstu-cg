@@ -1,8 +1,4 @@
-import time
-import numpy as np
-from math import ceil, radians, sin, cos
 from timeit import timeit
-from enum import Enum
 from typing import Dict, List, Tuple, Callable, NewType, Union
 
 from point import Point
@@ -11,38 +7,39 @@ from figure import Figure
 
 
 class AlgsTesting:
-    pass
-#     def __init__(self) -> None:
-#         self.alg_types = AlgType.get_all()[1:]
+    def __init__(self) -> None:
+        self.CENTER: Point = Point(100, 100)
+        self.START_RAD: int = 2
+        self.END_RAD: int = 100
+        self.STEP_RAD: int = 2
+        self.COUNT: int = 1
 
-#     def time_test(self) -> dict:
-#         count = 1000
-#         p_start = Point(321, 135)
-#         p_end = Point(789, 849)
-#         res = {}
+        self._circle_algs: List[Callable[[Point, int],
+                                         List[Point]]] = Algorithms.get_circle_algs()
+        self._ellipse_algs: List[Callable[[Point, int, int],
+                                          List[Point]]] = Algorithms.get_ellipse_algs()
 
-#         for alg_type in self.alg_types:
-#             alg = Algorithms.get_alg(alg_type)
-#             res[alg_type] = timeit(lambda: alg(
-#                 p_start, p_end), number=count) / count * 1000
+    def time_circle_test(self) -> Dict[Callable[[Point, int], List[Point]], float]:
+        rads: Tuple[int] = tuple(r for r in range(
+            self.START_RAD, self.END_RAD+1, self.STEP_RAD))
+        result: Dict[Callable[[Point, int], List[Point]], float] = {}
 
-#         return res
+        for alg in self._circle_algs:
+            for rad in rads:
+                result[alg] = timeit(lambda: alg(
+                    self.CENTER, rad), number=self.COUNT) / self.COUNT * 1000
+        return result
 
-#     def stairs_test(self) -> Tuple[Tuple, Dict]:
-#         length = 50
-#         start_point: Point = Point(length, 0)
-#         all_angles: Tuple[int] = tuple(range(0, 91, 5))
-#         p_ends: List[Point] = [Algorithms.rotate_point(
-#             start_point, radians(angle)) for angle in all_angles]
-#         center: Point = Point(0, 0)
 
-#         stairs = {}
-#         for alg_type in self.alg_types:
-#             alg = Algorithms.get_alg(alg_type)
-#             stairs[alg_type] = [alg(center, center+point)[1]
-#                                 for point in p_ends]  # stairs
+    def time_ellipse_test(self) -> Dict[Callable[[Point, int, int], List[Point]], float]:
+        rads: Tuple[int] = tuple(r for r in range(self.START_RAD, self.END_RAD+1, self.STEP_RAD))
+        result: Dict[Callable[[Point, int, int], List[Point]], float] = {}
 
-#         return all_angles, stairs
+        for alg in self._ellipse_algs:
+            for rad in rads:
+                result[alg] = timeit(lambda: alg(
+                    self.CENTER, rad, rad), number=self.COUNT) / self.COUNT * 1000
+        return result
 
 
 class Algorithms:
@@ -62,6 +59,14 @@ class Algorithms:
             (Way.LIB, Figure.ELLIPSE): Algorithms.library_ellipse
         }
         return method[(way, figure)]
+
+    @staticmethod
+    def get_circle_algs() -> List[Callable[[Point, int], List[Point]]]:
+        return [Algorithms.get_method(Figure.CIRCLE, way) for way in Way.get_all()[:-1]]
+
+    @staticmethod
+    def get_ellipse_algs() -> List[Callable[[Point, int, int], List[Point]]]:
+        return [Algorithms.get_method(Figure.ELLIPSE, way) for way in Way.get_all()[:-1]]
 
     def canonical_circle(center: Point, radius: int) -> List[Point]:
         pass
@@ -91,283 +96,12 @@ class Algorithms:
         pass
 
     def library_ellipse(center: Point,  a: int, b: int) -> None:
-        None
-
-    def method():
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                time.sleep(1e-16)
-                return func(*args, **kwargs)
-            return wrapper
-        return decorator
-
-    @staticmethod
-    def _lib(p_begin: Point, p_end: Point) -> Tuple[None, int]:
-        return None, 0
-
-    @staticmethod
-    def _dda(p_begin: Point, p_end: Point) -> Tuple[List[Point], int]:
-        def _round(num: float) -> int:
-            return int(num + (0.5 if num > 0 else -0.5))
-
-        values: List[Point] = []
-        stairs: int = 0
-
-        if p_begin == p_end:
-            values.append(p_begin)
-            return values, stairs
-
-        length = max(abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y))
-        dx = (p_end.x - p_begin.x) / length
-        dy = (p_end.y - p_begin.y) / length
-
-        curr_x, curr_y = p_begin.x, p_begin.y
-        tmp_x, tmp_y = curr_x, curr_y
-
-        for _ in range(1, length+2):
-
-            values.append(Point(tmp_x, tmp_y))
-            curr_x += dx
-            curr_y += dy
-
-            rx, ry = _round(curr_x), _round(curr_y)
-            if tmp_x != rx and tmp_y != ry:
-                stairs += 1
-                stairs_flag = True
-            else:
-                stairs_flag = False
-
-            tmp_x, tmp_y = rx, ry
-
-        if stairs_flag:
-            stairs -= 1
-        return values, stairs
-
-    @staticmethod
-    def bresenham_integer(p_begin: Point, p_end: Point) -> Tuple[List[Point], int]:
-        def _sign(num: float) -> int:
-            return 1 if num > 0 else -1 if num < 0 else 0
-
-        values: List[Point] = []
-        stairs: int = 0
-
-        if p_begin == p_end:
-            values.append(p_begin)
-            return values, stairs
-
-        x_sign, y_sign = _sign(p_end.x - p_begin.x), _sign(p_end.y - p_begin.y)
-        dx, dy = abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y)
-
-        swapped = False
-        if dy > dx:
-            dx, dy = dy, dx
-            swapped = True
-
-        err = int(2*dy-dx)
-        ddx, ddy = int(2*dx), int(2*dy)
-        curr_x, curr_y = p_begin.x, p_begin.y
-
-        for _ in range(1, dx+2):
-            tmp_x, tmp_y = curr_x, curr_y
-            values.append(Point(curr_x, curr_y))
-
-            if err >= 0:
-                if swapped:
-                    curr_x += x_sign
-                else:
-                    curr_y += y_sign
-
-                err -= ddx
-
-            if err < 0:
-                if swapped:
-                    curr_y += y_sign
-                else:
-                    curr_x += x_sign
-
-            err += ddy
-
-            if tmp_x != curr_x and tmp_y != curr_y:
-                stairs += 1
-                stairs_flag = True
-            else:
-                stairs_flag = False
-
-        if stairs_flag:
-            stairs -= 1
-
-        return values, stairs
-
-    @staticmethod
-    @method()
-    def bresenham_float(p_begin: Point, p_end: Point) -> Tuple[List[Point], int]:
-        def _sign(num: float) -> int:
-            return 1 if num > 0 else -1 if num < 0 else 0
-
-        values: List[Point] = []
-        stairs: int = 0
-
-        if p_begin == p_end:
-            values.append(p_begin)
-            return values, stairs
-
-        x_sign, y_sign = _sign(p_end.x - p_begin.x), _sign(p_end.y - p_begin.y)
-        dx, dy = abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y)
-
-        swapped = False
-        if dy > dx:
-            dx, dy = dy, dx
-            swapped = True
-
-        m = dy/dx
-        err = m-0.5
-
-        curr_x, curr_y = p_begin.x, p_begin.y
-        for _ in range(1, dx+2):
-            tmp_x, tmp_y = curr_x, curr_y
-            values.append(Point(curr_x, curr_y))
-
-            if err >= 0:
-                if swapped:
-                    curr_x += x_sign
-                else:
-                    curr_y += y_sign
-
-                err -= 1.0
-
-            if err < 0:
-                if swapped:
-                    curr_y += y_sign
-                else:
-                    curr_x += x_sign
-            err += m
-
-            if tmp_x != curr_x and tmp_y != curr_y:
-                stairs, stairs_flag = stairs + 1, True
-            else:
-                stairs_flag = False
-
-        if stairs_flag:
-            stairs -= 1
-
-        return values, stairs
-
-    @staticmethod
-    def bresenham_antialiasing(p_begin: Point, p_end: Point) -> Tuple[List[Point], int]:
-        def _sign(num: float) -> int:
-            return 1 if num > 0 else -1 if num < 0 else 0
-
-        def _round(num: float) -> int:
-            return int(num + (0.5 if num > 0 else -0.5))
-
-        intens = 100
-
-        values: List[Point] = []
-        stairs: int = 0
-
-        if p_begin == p_end:
-            values.append(p_begin)
-            return values, stairs
-
-        x_sign, y_sign = _sign(p_end.x - p_begin.x), _sign(p_end.y - p_begin.y)
-        dx, dy = abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y)
-
-        swapped = False
-        if dy > dx:
-            dx, dy = dy, dx
-            swapped = True
-
-        m = dy/dx * intens
-        err = intens/2
-        w = intens - m
-
-        curr_x, curr_y = p_begin.x, p_begin.y
-
-        for _ in range(1, dx+2):
-            tmp_x, tmp_y = curr_x, curr_y
-            values.append(Point(curr_x, curr_y, _round(err)))
-            if err >= w:
-                if swapped:
-                    curr_x += x_sign
-                else:
-                    curr_y += y_sign
-
-                err -= intens
-
-            if err < w:
-                if swapped:
-                    curr_y += y_sign
-                else:
-                    curr_x += x_sign
-
-            err += m
-
-            if tmp_x != curr_x and tmp_y != curr_y:
-                stairs, stairs_flag = stairs + 1, True
-            else:
-                stairs_flag = False
-
-        if stairs_flag:
-            stairs -= 1
-
-        return values, stairs
-
-    @staticmethod
-    def wu(p_begin: Point, p_end: Point) -> Tuple[List[Point], int]:
-        def _fpart(num):
-            return num - int(num)
-
-        def _rfpart(num):
-            return 1 - _fpart(num)
-
-        pb, pe = p_begin.copy(), p_end.copy()
-        values: List[Point] = []
-        stairs: int = 0
-
-        if pb == pe:
-            values.append(pb)
-            return values, stairs
-
-        dx, dy = pe.x-pb.x, pe.y-pb.y
-
-        swapped = False
-        if abs(dy) > abs(dx):
-            dx, dy = dy, dx
-            pb.x, pb.y, pe.x, pe.y = pb.y, pb.x, pe.y, pe.x
-            swapped = True
-        if pb.x > pe.x:
-            pb, pe = pe, pb
-
-        m = dy/dx
-
-        y_accum = float(pb.y)
-        for x in range(pb.x, pe.x+1):
-            last_y = y = int(y_accum)
-
-            if swapped:
-                values.append(Point(y, x, 100*_rfpart(y_accum)))
-                values.append(Point(y+1, x, 100*_fpart(y_accum)))
-            else:
-                values.append(Point(x, y, 100*_rfpart(y_accum)))
-                values.append(Point(x, y+1, 100*_fpart(y_accum)))
-
-            y_accum += m
-
-            if last_y != int(y_accum):
-                stairs, stairs_flag = stairs + 1, True
-            else:
-                stairs_flag = False
-
-        if stairs_flag:
-            stairs -= 1
-
-        return values, stairs
-
-    @staticmethod
-    def rotate_point(point: Point, angle: float) -> Point:
-        mtrx = np.array([[cos(angle),   sin(angle),     0],
-                         [-sin(angle),   cos(angle),    0],
-                         [0,              0,            1]])
-
-        res = point.to_ndarray() @ mtrx
-        return Point(int(res[0]), int(res[1]))
+        return None
+
+    # def method():
+    #     def decorator(func):
+    #         def wrapper(*args, **kwargs):
+    #             time.sleep(1e-16)
+    #             return func(*args, **kwargs)
+    #         return wrapper
+    #     return decorator
