@@ -9,15 +9,15 @@ from spectrum import Spectrum
 
 class Drawer:
     def __init__(self, qp: QPainter) -> None:
-        self.qp: QPainter = qp
+        self.qp = qp
         self.qp.setPen(QPen(Qt.black, 1))
 
     def _draw_ellipse(self, ellipse: Ellipse) -> None:
-        points: Union[List[Point], None] = ellipse.points
+        points = ellipse.points
         self.qp.setPen(ellipse.color.toQcolor())
 
         if points is None:
-            self.qp.drawEllipse(ellipse.center.to_qpoint(),
+            self.qp.drawEllipse(ellipse.center.to_qpointf(),
                                 ellipse.rx, ellipse.ry)
         else:
             for point in points:

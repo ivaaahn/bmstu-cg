@@ -1,5 +1,7 @@
 from typing import List, Union
+from algorithms import Algorithms
 
+from figure import Figure
 from color import Color
 from way import Way
 from point import Point
@@ -7,12 +9,12 @@ from point import Point
 
 class Ellipse:
     def __init__(self, center: Point, rx: int, ry: int, way: Way, color: Color):
-        self._center: Point = center
-        self._rx: int = rx
-        self._ry: int = ry
-        self._way: Way = way
-        self._color: Color = color
-        self._points: Union[List[Point], None] = []
+        self._center = center
+        self._rx = rx
+        self._ry = ry
+        self._way = way
+        self._color = color
+        self._points: Union[List[Point], None] = None
         self._calculate_points()
 
     @property
@@ -44,4 +46,11 @@ class Ellipse:
 
     #TODO
     def _calculate_points(self):
-        pass
+        figure = Figure.CIRCLE if (self.rx == self.ry) else Figure.ELLIPSE
+        method = Algorithms.get_method(figure, self.way)
+
+        if figure is Figure.CIRCLE:
+            self._points = method(self.center, self.rx)
+        else:
+            self._points = method(self.center, self.rx, self.ry)
+

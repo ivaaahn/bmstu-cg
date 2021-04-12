@@ -23,7 +23,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self._data = Data()
-        self._algs_testing = AlgsTesting()
+        self._alg_tester = AlgsTesting()
 
         self.bind_buttons()
 
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.canvas.init_sizes = False
         self.repaint()
 
-    def _read_figure(self) -> Figure:
+    def _read_figure_type(self) -> Figure:
         return Figure(self.figure_list.currentIndex())
 
     def _read_color(self) -> Color:
@@ -69,16 +69,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _read_common_params(self) -> NamedTuple:
         class CommonParams(NamedTuple):
-            ftype: Figure = self._read_figure()
-            way: Way = self._read_way()
-            color: Color = self._read_color()
-            center: Point = self._read_center_coords()
+            ftype = self._read_figure_type()
+            way = self._read_way()
+            color = self._read_color()
+            center = self._read_center_coords()
         return CommonParams()
 
-    def _draw_spectrum_handler(self) -> None:
+    def _spectrum_rendering_handler(self) -> None:
         cp = self._read_common_params()
-        step: int = self._read_step()
-        count: int = self._read_count()
+        step = self._read_step()
+        count = self._read_count()
 
         if cp.ftype is Figure.CIRCLE:
             r_start: int = self._read_r_start()
@@ -91,35 +91,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cp.ftype, cp.way, cp.color, cp.center, rx_start, ry_start, step, count))
         self.repaint()
 
-    def _draw_figure_handler(self) -> None:
+    def _figure_rendering_handler(self) -> None:
         cp = self._read_common_params()
 
         if cp.ftype is Figure.CIRCLE:
-            r: int = self._read_r()
+            r  = self._read_r()
             rx, ry = r, r
         else:
-            rx: int = self._read_rx()
-            ry: int = self._read_ry()
+            rx  = self._read_rx()
+            ry  = self._read_ry()
 
         self._data.add_ellipse(Ellipse(cp.center, rx, ry, cp.way, cp.color))
         self.repaint()
 
-    def _clear_handler(self) -> None:
+    def _cleanup_handler(self) -> None:
         self._data.clear_all()
         self.repaint()
 
-    def _time_test_circle_handler(self) -> None:
-        test_result: Dict[Callable[[Point, int], List[Point]],
-                          float] = self._algs_testing.time_circle_test()
+    def _circle_timing_test_handler(self) -> None:
+        test_result = self._alg_tester.time_circle_test()
 
         # TODO добавить вывод инфографики
         for key, value in test_result.items():
             print(f'{key} : {value}')
         # print(test_result)
 
-    def _time_test_ellipse_handler(self) -> None:
-        test_result: Dict[Callable[[Point, int], List[Point]],
-                          float] = self._algs_testing.time_ellipse_test()
+    def _ellipse_timing_test_handler(self) -> None:
+        test_result = self._alg_tester.time_ellipse_test()
 
         # TODO добавить вывод инфографики
         for key, value in test_result.items():
@@ -127,11 +125,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # print(test_result)
 
     def bind_buttons(self) -> None:
-        self.draw_figure_btn.clicked.connect(self._draw_figure_handler)
-        self.draw_spectrum_btn.clicked.connect(self._draw_spectrum_handler)
-        self.clear_btn.clicked.connect(self._clear_handler)
-        self.cmp_circle_btn.clicked.connect(self._time_test_circle_handler)
-        self.cmp_ellipse_btn.clicked.connect(self._time_test_ellipse_handler)
+        self.draw_figure_btn.clicked.connect(self._figure_rendering_handler)
+        self.draw_spectrum_btn.clicked.connect(self._spectrum_rendering_handler)
+        self.clear_btn.clicked.connect(self._cleanup_handler)
+        self.cmp_circle_btn.clicked.connect(self._circle_timing_test_handler)
+        self.cmp_ellipse_btn.clicked.connect(self._ellipse_timing_test_handler)
 
         self.figure_list.currentIndexChanged.connect(self._fig_changed)
         self._fig_changed(None)
@@ -145,7 +143,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             event.ignore()
 
     def _fig_changed(self, ix) -> None:
-        if self._read_figure() is Figure.ELLIPSE:
+        if self._read_figure_type() is Figure.ELLIPSE:
             self.r_input.setDisabled(True)
             self.r_start_input.setDisabled(True)
 
@@ -166,9 +164,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.canvas.calc_sizes()
             self.canvas.init_sizes = True
 
-        qp: QPainter = QPainter(self)
+        qp = QPainter(self)
         qp.drawPixmap(QRect(self.canvas.x_min, self.canvas.y_min, self.canvas.x_max,
                             self.canvas.y_max), self.canvas.surf)
+                            
         drawer = Drawer(qp)
         drawer.draw_ellipses(self._data.ellipses)
         drawer.draw_spectrums(self._data.spectrums)

@@ -11,7 +11,7 @@ class Canvas(QtWidgets.QLabel):
         self.surf = QPixmap(3, 3)
         self.surf.fill(Qt.white)
 
-        self.init_sizes = False
+        self.init_sizes: bool = False
 
     def calc_sizes(self) -> None:
         self.x_min = self.x()

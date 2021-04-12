@@ -1,19 +1,15 @@
 from __future__ import division
 
-from PyQt5.QtCore import QPoint
+from PyQt5.QtCore import QPoint, QPointF
 from typing import NoReturn, Tuple
 
 import numpy as np
 
 
 class Point():
-    def __init__(self, x: int, y: int):
-        self._x: int = x
-        self._y: int = y
-
-    @staticmethod
-    def _round(num: float) -> int:
-        return int(num + (0.5 if num > 0 else -0.5))
+    def __init__(self, x: float, y: float):
+        self._x = x
+        self._y = y
 
     @property
     def value(self) -> Tuple[float]:
@@ -54,11 +50,23 @@ class Point():
     def to_qpoint(self):
         return QPoint(*self.value)
 
+    def to_qpointf(self):
+        return QPointF(*self.value)
+
     def pretty_value(self) -> tuple:
         return self.pretty_x(), self.pretty_y()
 
     def to_ndarray(self) -> np.ndarray:
         return np.array([self.x, self.y, 1])
+
+    def bisect_mirror(self, center):
+        return Point(center.x+self._y-center._y, center.y+self._x-center.x)
+
+    def y_mirror(self, center):
+        return Point(2*center.x-self.x, self.y)
+
+    def x_mirror(self, center):
+        return Point(self.x, 2*center.y-self.y)
 
     def __repr__(self):
         return f'Point <{self.value}>'
@@ -69,8 +77,21 @@ class Point():
     def __add__(self, other):
         return Point(x=self.x+other.x, y=self.y+other.y)
 
+    def __imul__(self, other):
+        self._x *= other
+        self._y *= other
+        return self
+
+    def __iadd__(self, other):
+        self._x += other.x
+        self._y += other.y
+        return self
+
     def __truediv__(self, number: float):
         return Point(x=self.x/number, y=self.y/number)
-
     def __eq__(self, other):
+
         return self.x == other.x and self.y == other.y
+
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
