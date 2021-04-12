@@ -169,14 +169,13 @@ class Algorithms:
             return [center.copy()]
 
         result: List[Point] = []
-        x, y, delta = 0, radius, 1.25-radius
+        x, y, delta = 0, radius, 1-radius
 
         Algorithms._extend_with_mirrored_ext(result, x, y, center.x, center.y)
         while x < y:
             x += 1
 
-            # Окружность выше средней точки
-            if delta > 0:
+            if delta >= 0:
                 y -= 1
                 delta -= 2 * y  # (2y-2)
 
@@ -193,14 +192,14 @@ class Algorithms:
         result: List[Point] = []
 
         m: float = ry/rx
-        rxsqr: int = rx**2
-        rysqr: int = ry**2
+        rxsqr, rysqr = rx*rx, ry*ry
 
         limit = utils.round(rxsqr/sqrt(rxsqr+rysqr))
 
         for x in range(limit+1):
             y = utils.round(m * sqrt(rxsqr-x*x))
             Algorithms._extend_with_mirrored(result, x, y, center.x, center.y)
+
 
         limit = utils.round(rysqr/sqrt(rxsqr+rysqr))
         m: float = rx/ry
@@ -230,8 +229,105 @@ class Algorithms:
 
         return result
 
-    def bresenham_ellipse(center: Point, a: int, b: int) -> List[Point]:
-        pass
+    # def bresenham_ellipse(center: Point, rx: int, ry: int) -> List[Point]:
+    #     if rx == 0 and ry == 0:
+    #         return [center.copy()]
+
+    #     result: List[Point] = []
+    #     rxsqr, rysqr = rx*rx, ry*ry
+
+    #     # Error(x, y) = x^2 * ry^2 + y^2 * rx^2 - rx^2*ry^2
+    #     # delta == Error(x+1, y-1)
+    #     x, y, delta = 0, ry, rxsqr+rysqr-2*rxsqr*ry
+
+    #     Algorithms._extend_with_mirrored(result, x, y, center.x, center.y)
+
+    #     #? OR y >= 0 ?
+    #     while y > 0:
+    #         if delta < 0:
+    #             # delta_tmp - разность расстояний до горизонтального и диагональнго пикселей
+    #             delta_tmp = 2*(delta + y*rxsqr) - rxsqr
+    #             x += 1
+
+    #             # Окружность ближе к горизонтальному пикселю
+    #             if delta_tmp <= 0:      # x, y = x+1, y
+    #                 delta += rysqr*(2*x + 1)
+    #             else:                   # x, y = x+1, y-1
+    #                 y -= 1
+    #                 delta += rysqr*(2*x + 1) + rxsqr*(1 - 2*y)
+
+    #         elif delta > 0:
+    #             delta_tmp = 2*(delta - rysqr*x) - rysqr
+    #             y -= 1
+
+    #             if delta_tmp <= 0:      # x, y = x+1, y-1
+    #                 x += 1
+    #                 delta += rysqr*(2*x + 1) + rxsqr*(1 - 2*y)
+    #             else:                   # x, y = x, y-1
+    #                 delta += rxsqr*(1 - 2*y)
+                    
+    #         else:
+    #             x, y = x+1, y-1
+    #             delta += rysqr*(2*x+1) + rxsqr*(1-2*y)
+
+    #         Algorithms._extend_with_mirrored(
+    #             result, x, y, center.x, center.y)
+
+    #     return result
+
+
+    def bresenham_ellipse(center: Point, rx: int, ry: int) -> List[Point]:
+        if rx == 0 and ry == 0:
+            return [center.copy()]
+
+        result: List[Point] = []
+        rx_sqr, ry_sqr = rx*rx, ry*ry
+        two_rx_sqr, two_ry_sqr = 2*rx*rx, 2*ry*ry
+
+        # Error(x, y) = x^2 * ry^2 + y^2 * rx^2 - rx^2*ry^2
+        # delta == Error(x+1, y-1)
+
+        x, y = rx, 0
+        x_change, y_change = ry_sqr*(1-2*rx), rx_sqr
+        delta = 0
+        stop_x, stop_y = two_ry_sqr*rx, 0
+
+        while(stop_x >= stop_y):
+            Algorithms._extend_with_mirrored(result, x, y, center.x, center.y)
+
+            y += 1
+            stop_y += two_rx_sqr
+            delta += y_change
+            y_change += two_rx_sqr
+
+            if 2*delta + x_change > 0:
+                x -= 1
+                stop_x -= two_ry_sqr
+                delta += x_change
+                x_change += two_ry_sqr
+
+        x, y = 0, ry
+        x_change, y_change = ry_sqr, rx_sqr*(1-2*ry)
+        delta = 0
+        stop_x, stop_y = 0, two_rx_sqr*ry
+        
+        while(stop_x <= stop_y):
+            Algorithms._extend_with_mirrored(result, x, y, center.x, center.y)
+
+            x += 1
+            stop_x += two_ry_sqr
+            delta += x_change
+            x_change += two_ry_sqr
+
+            if 2*delta + y_change > 0:
+                y -= 1
+                stop_y -= two_rx_sqr
+                delta += y_change
+                y_change += two_rx_sqr
+
+        return result
+
+
 
     def midpoint_ellipse(center: Point, a: int, b: int) -> List[Point]:
         pass
