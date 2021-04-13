@@ -6,6 +6,7 @@ from color import Color
 from figure import Figure
 from ellipse import Ellipse
 
+import utils
 
 class Spectrum:
     def __init__(self, figure: Figure, way: Way, color: Color, center: Point,
@@ -59,12 +60,9 @@ class Spectrum:
         return self._way
 
     def _generate_ellipses(self) -> None:
-        def _round(num: float) -> int:
-            return int(num + (0.5 if num >= 0 else -0.5))
-
         rx_end: int = self.rx_start + self.count * self.step
         ratio: float = self.ry_start / self.rx_start
 
         for rx in range(self.rx_start, rx_end+1, self.step):
             self.ellipses.append(
-                Ellipse(self.center, rx, _round(rx*ratio), self.way, self.color))
+                Ellipse(self.center, rx, utils.round(rx*ratio), self.way, self.color))
