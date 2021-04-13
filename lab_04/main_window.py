@@ -109,20 +109,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.repaint()
 
     def _circle_timing_test_handler(self) -> None:
-        test_result = self._alg_tester.time_circle_test()
+        rads, data = self._alg_tester.time_circle_test()
+        GraphPlotter(rads, data)
 
-        # TODO добавить вывод инфографики
-        for key, value in test_result.items():
-            print(f'{key} : {value}')
-        # print(test_result)
 
     def _ellipse_timing_test_handler(self) -> None:
-        test_result = self._alg_tester.time_ellipse_test()
+        rads, data = self._alg_tester.time_ellipse_test()
+        GraphPlotter(rads, data)
 
-        # TODO добавить вывод инфографики
-        for key, value in test_result.items():
-            print(f'{key} : {value}')
+        # for key, value in test_result.items():
+            # print(f'{key} : {value}')
         # print(test_result)
+
 
     def bind_buttons(self) -> None:
         self.draw_figure_btn.clicked.connect(self._figure_rendering_handler)

@@ -1,6 +1,8 @@
-from typing import Tuple
+from algorithms import Algorithms
+from typing import Dict, Tuple, Callable, List
 import matplotlib.pyplot as plt
 
+from point import Point
 
 class BarPlotter:
     def __init__(self, data: dict) -> None:
@@ -18,18 +20,22 @@ class BarPlotter:
 
         plt.show()
 
-
 class GraphPlotter:
-    def __init__(self, all_angles: Tuple[int], data: dict) -> None:
-        self._all_angles: Tuple = all_angles
+    def __init__(self, rads: Tuple[int], data: Dict[Callable[[Point, int], List[Point]], float]) -> None:
+        self._rads = rads
         self._data = data
 
-        plt.title("Сравнение кол-ва ступенек (длина отрезка = 50)")
-        plt.xlabel('Угол (в градусах)', fontsize=12, color='blue')
-        plt.ylabel('Кол-во ступенек', fontsize=12, color='red')
+        plt.title("Сравнение времени работы алгоритмов")
+        plt.xlabel('Радиус окружности', fontsize=12, color='blue')
+        plt.ylabel('Время выполнения (мкс)', fontsize=12, color='red')
 
-        for alg, stairs in data.items():
-            plt.plot(self._all_angles, stairs, label=alg)
+        # print(rads)
+
+        # for key, value in self._data.items():
+        #     print(f'{key}: {value}')
+
+        for alg, time in data.items():
+            plt.plot(self._rads, time, label=str(Algorithms.get_way_and_figure(alg)[0]))
 
         plt.grid(True)
         plt.legend()

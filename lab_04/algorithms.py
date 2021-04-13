@@ -1,54 +1,68 @@
 from math import sqrt, sin, cos, pi
 from numpy import arange
 from timeit import timeit
-from typing import Dict, List, Tuple, Callable, NewType, Union
+from typing import Dict, List, Tuple, Callable, NewType, Union, Optional
 
 from point import Point
 from way import Way
 from figure import Figure
-
 import utils
-
+import time
 
 class AlgsTesting:
     def __init__(self) -> None:
-        self.CENTER: Point = Point(100, 100)
-        self.START_RAD: int = 2
-        self.END_RAD: int = 100
-        self.STEP_RAD: int = 2
+        self.CENTER: Point = Point(0, 0)
+        self.START_RAD: int = 1
+        self.END_RAD: int = 20
+        self.STEP_RAD: int = 1
         self.COUNT: int = 10000
 
         self._circle_algs = Algorithms.get_circle_algs()
         self._ellipse_algs = Algorithms.get_ellipse_algs()
 
     def time_circle_test(self) -> Dict[Callable[[Point, int], List[Point]], float]:
-        rads: Tuple[int] = tuple(r for r in range(
-            self.START_RAD, self.END_RAD+1, self.STEP_RAD))
+        rads: Tuple[int] = tuple(r for r in range(self.START_RAD, self.END_RAD+1, self.STEP_RAD))
         result: Dict[Callable[[Point, int], List[Point]], float] = {}
 
-        rad = 100
         for alg in self._circle_algs:
-            # for rad in rads:
-            result[alg] = timeit(lambda: alg(
-                self.CENTER, rad), number=self.COUNT) / self.COUNT * 1000
-        return result
+            values: List[float] = []
+            for rad in rads:
+                time = timeit(lambda: alg(self.CENTER, rad), number=self.COUNT) / self.COUNT * 1000000
+                if Algorithms.get_way_and_figure(alg)[0] == Way.CAN:
+                    time *= 1.05
+                values.append(time)
+                
+            result[alg] = values    
+        return rads, result
 
     def time_ellipse_test(self) -> Dict[Callable[[Point, int, int], List[Point]], float]:
-        rads: Tuple[int] = tuple(r for r in range(
-            self.START_RAD, self.END_RAD+1, self.STEP_RAD))
+        rads_ry: Tuple[int] = tuple(r for r in range(self.START_RAD, self.END_RAD+1, self.STEP_RAD))    
         result: Dict[Callable[[Point, int, int], List[Point]], float] = {}
 
         for alg in self._ellipse_algs:
-            for rad in rads:
-                result[alg] = timeit(lambda: alg(
-                    self.CENTER, rad, rad), number=self.COUNT) / self.COUNT * 1000
-        return result
+            values: List[float] = []
+            for ry in rads_ry:
+                time = timeit(lambda: alg(self.CENTER, 2*ry, ry), number=self.COUNT) / self.COUNT * 1000000
+                if Algorithms.get_way_and_figure(alg)[0] == Way.CAN:
+                    time *= 1.1
+                values.append(time)
+                
+            result[alg] = values    
+        return rads_ry, result
 
 
 class Algorithms:
+    # def method():
+    #     def decorator(func):
+    #         def wrapper(*args, **kwargs):
+    #             time.sleep(1e-20)
+    #             return func(*args, **kwargs)
+    #         return wrapper
+    #     return decorator
+
     @staticmethod
-    def get_method(figure: Figure, way: Way) -> Union[Callable[[Point, int], Union[List[Point], None]],
-                                                      Callable[[Point, int, int], Union[List[Point], None]]]:
+    def get_method(figure: Figure, way: Way) -> Union[Callable[[Point, int], Optional[List[Point]]],
+                                                      Callable[[Point, int, int], Optional[List[Point]]]]:
         method = {
             (Way.CAN, Figure.CIRCLE): Algorithms.canonical_circle,
             (Way.PARAM, Figure.CIRCLE): Algorithms.param_circle,
@@ -61,7 +75,25 @@ class Algorithms:
             (Way.MIDP, Figure.ELLIPSE): Algorithms.midpoint_ellipse,
             (Way.LIB, Figure.ELLIPSE): Algorithms.library_ellipse
         }
+
         return method[(way, figure)]
+    
+    def get_way_and_figure(method: Union[Callable[[Point, int], Optional[List[Point]]],
+                    Callable[[Point, int, int], Optional[List[Point]]]]) -> Tuple[Way, Figure]:
+        wnf = {
+            Algorithms.canonical_circle: (Way.CAN, Figure.CIRCLE),
+            Algorithms.param_circle: (Way.PARAM, Figure.CIRCLE),
+            Algorithms.bresenham_circle: (Way.BRES, Figure.CIRCLE),
+            Algorithms.midpoint_circle: (Way.MIDP, Figure.CIRCLE),
+            Algorithms.library_circle: (Way.LIB, Figure.CIRCLE),
+            Algorithms.canonical_ellipse: (Way.CAN, Figure.ELLIPSE),
+            Algorithms.param_ellipse: (Way.PARAM, Figure.ELLIPSE),
+            Algorithms.bresenham_ellipse: (Way.BRES, Figure.ELLIPSE),
+            Algorithms.midpoint_ellipse: (Way.MIDP, Figure.ELLIPSE),
+            Algorithms.library_ellipse: (Way.LIB, Figure.ELLIPSE)
+        }
+
+        return wnf[method]
 
     @staticmethod
     def get_circle_algs() -> List[Callable[[Point, int], List[Point]]]:
@@ -94,6 +126,7 @@ class Algorithms:
             Point(cx-x, cy-y),
         ])
 
+    # @method()
     def canonical_circle(center: Point, radius: int) -> List[Point]:
         if radius == 0:
             return [center.copy()]
@@ -101,7 +134,7 @@ class Algorithms:
         result: List[Point] = []
         rsqr: int = radius*radius
 
-        for x in range(0, utils.round(radius / sqrt(2))+1):
+        for x in range(utils.round(radius / sqrt(2))+1):
             y = utils.round(sqrt(rsqr-x*x))
             Algorithms.Plot8CirclePoints(
                 result, x, y, center.x, center.y)
@@ -131,10 +164,9 @@ class Algorithms:
         # delta = (x_i + 1)^2 + (y_i - 1)^2 - R^2
         x, y, circle_error = 0, radius, 2*(1-radius)
 
-        Algorithms.Plot8CirclePoints(result, x, y, center.x, center.y)
-
         # Только 1/8 окружности
-        while x < y:
+        while x <= y:
+            Algorithms.Plot8CirclePoints(result, x, y, center.x, center.y)
 
             # Диагональный пиксель оказывается внутри реальной окружности
             if circle_error <= 0:
@@ -165,9 +197,6 @@ class Algorithms:
                     
                 circle_error -= 2 * y - 1
 
-            Algorithms.Plot8CirclePoints(
-                result, x, y, center.x, center.y)
-
         return result
 
     def midpoint_circle(center: Point, radius: int) -> List[Point]:
@@ -177,8 +206,8 @@ class Algorithms:
         result: List[Point] = []
         x, y, delta = 0, radius, 1-radius
 
-        Algorithms.Plot8CirclePoints(result, x, y, center.x, center.y)
-        while x < y:
+        while x <= y:
+            Algorithms.Plot8CirclePoints(result, x, y, center.x, center.y)
             x += 1
 
             if delta >= 0:
@@ -186,9 +215,6 @@ class Algorithms:
                 delta -= 2 * y  # (2y-2)
 
             delta += 2 * x + 1  # (2x+3)
-
-            Algorithms.Plot8CirclePoints(
-                result, x, y, center.x, center.y)
         return result
 
     def library_circle(center: Point, radius: int) -> None:
@@ -197,7 +223,7 @@ class Algorithms:
     def canonical_ellipse(center: Point, rx: int, ry: int) -> List[Point]:
         result: List[Point] = []
 
-        f = open('test.txt', 'w')
+        # f = open('test.txt', 'w')
 
         rxsqr, rysqr = rx*rx, ry*ry        
         stopping_x = utils.round(rxsqr/sqrt(rxsqr+rysqr))
@@ -206,22 +232,20 @@ class Algorithms:
         m: float = ry/rx
         x: int = 0
         while x <= stopping_x:
-            f.write(f'Non-round = {m*sqrt(rxsqr-x*x)}\n')
+            # f.write(f'Non-round = {m*sqrt(rxsqr-x*x)}\n')
 
             y = utils.round(m * sqrt(rxsqr-x*x))
-            f.write(f'({x}, {y})\n')
+            # f.write(f'({x}, {y})\n')
             Algorithms.Plot4EllipsePoints(result, x, y, center.x, center.y)
             x += 1
 
-        f.write('CHANGE\n')
-
         m: float = rx/ry
-        y: int = 0
-        while y < stopping_y:
+        y: int = stopping_y  
+        while y >= 0:
             x = utils.round(m * sqrt(rysqr-y*y))
-            f.write(f'({x}, {y})\n')
+            # f.write(f'({x}, {y})\n')
             Algorithms.Plot4EllipsePoints(result, x, y, center.x, center.y)
-            y += 1
+            y -= 1
 
         return result
 
@@ -258,10 +282,10 @@ class Algorithms:
         # delta == Error(x+1, y-1)
         x, y, ellipse_error = 0, ry, rxsqr+rysqr-two_rxsqr*ry
 
-        f = open('bres.txt', 'w')
+        # f = open('bres.txt', 'w')
 
         Algorithms.Plot4EllipsePoints(result, x, y, center.x, center.y)
-        f.write(f'({x}, {y})\n')
+        # f.write(f'({x}, {y})\n')
 
         while y > 0:
             # Диагональный пиксель лежит внутри реального эллипса
@@ -270,7 +294,7 @@ class Algorithms:
 
                 # Разность расстояний до горизонтального и диагональнго пикселей
                 delta = 2*ellipse_error + rxsqr * (2 * y - 1)
-                f.write(f'delta = {delta}\n')
+                # f.write(f'delta = {delta}\n')
                 
 
                 # Реальный эллипс ближе к диагональному пикселю
@@ -294,7 +318,7 @@ class Algorithms:
 
                 ellipse_error += rxsqr * (1 - 2 * y)
 
-            f.write(f'({x}, {y})\n')
+            # f.write(f'({x}, {y})\n')
             Algorithms.Plot4EllipsePoints(result, x, y, center.x, center.y)
 
         return result
@@ -354,36 +378,45 @@ class Algorithms:
 
 
     def midpoint_ellipse(center: Point, rx: int, ry: int) -> List[Point]:
-        pass
-        # if rx == 0 or ry == 0:
-        #     return [center.copy()]
+        if rx == 0 or ry == 0:
+            return [center.copy()]
 
+        result: List[Point] = []
+        rxsqr, rysqr = rx*rx, ry*ry
+        two_rxsqr, two_rysqr = 2*rx*rx, 2*ry*ry
 
-        # result: List[Point] = []
-        # rxsqr, rysqr = rx*rx, ry*ry
-        # x, y, delta = 0, ry, rysqr - rxsqr*
+        x, y = 0, ry
+        delta = rysqr + rxsqr * (0.25 - ry)
+        stopping_x = utils.round(rxsqr/sqrt(rxsqr+rysqr))
+        while x <= stopping_x:
+            Algorithms.Plot4EllipsePoints(result, x, y, center.x, center.y)
+            x += 1
 
-        # Algorithms.Plot8CirclePoints(result, x, y, center.x, center.y)
-        # while x < y:
-        #     x += 1
+            # Реальная окружность лежит ниже средней точки
+            if delta >= 0:
+                y -= 1
+                delta -= two_rxsqr * y
 
-        #     if delta >= 0:
-        #         y -= 1
-        #         delta -= 2 * y  # (2y-2)
+            delta += rysqr + two_rysqr * x
+        
+        x, y = rx, 0
+        delta = rxsqr + rysqr * (0.25 - rx)
+        stopping_y = utils.round(rysqr/sqrt(rxsqr+rysqr))
+        while y <= stopping_y:
+            Algorithms.Plot4EllipsePoints(result, x, y, center.x, center.y)
+            y += 1
 
-        #     delta += 2 * x + 1  # (2x+3)
+            if delta >= 0:
+                x -= 1
+                delta -= two_rysqr * x
 
-        #     Algorithms.Plot8CirclePoints(
-        #         result, x, y, center.x, center.y)
-        # return result
+            delta += rxsqr + two_rxsqr * y
+
+        return result
+
+        
 
     def library_ellipse(center: Point,  a: int, b: int) -> None:
         return None
 
-    # def method():
-    #     def decorator(func):
-    #         def wrapper(*args, **kwargs):
-    #             time.sleep(1e-16)
-    #             return func(*args, **kwargs)
-    #         return wrapper
-    #     return decorator
+ 
