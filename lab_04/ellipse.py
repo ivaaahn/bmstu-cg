@@ -44,7 +44,6 @@ class Ellipse:
     def __repr__(self) -> str:
         return f'Ellipse <({str(self._center)}, {self._rx}, {self._ry}), way: {str(self.way)}, color: {str(self.color)}>'
 
-    #TODO
     def _calculate_points(self):
         figure = Figure.CIRCLE if (self.rx == self.ry) else Figure.ELLIPSE
         method = Algorithms.get_method(figure, self.way)
@@ -53,4 +52,3 @@ class Ellipse:
             self._points = method(self.center, self.rx)
         else:
             self._points = method(self.center, self.rx, self.ry)
-

@@ -89,6 +89,7 @@ class Point():
 
     def __truediv__(self, number: float):
         return Point(x=self.x/number, y=self.y/number)
+
     def __eq__(self, other):
 
         return self.x == other.x and self.y == other.y

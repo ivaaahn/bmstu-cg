@@ -2,12 +2,11 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 from PyQt5.QtCore import QRect
 from PyQt5.QtGui import QPainter
-from typing import NamedTuple, Dict, Callable, List
-from collections import namedtuple
+from typing import NamedTuple
 
 from design.main_window_ui import Ui_MainWindow
 from algorithms import AlgsTesting
-from plotter import BarPlotter, GraphPlotter
+from plotter import GraphPlotter
 from drawer import Drawer
 from point import Point
 from color import Color
@@ -24,7 +23,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self._data = Data()
         self._alg_tester = AlgsTesting()
-
         self.bind_buttons()
 
     def resizeEvent(self, event) -> None:
@@ -95,11 +93,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cp = self._read_common_params()
 
         if cp.ftype is Figure.CIRCLE:
-            r  = self._read_r()
+            r = self._read_r()
             rx, ry = r, r
         else:
-            rx  = self._read_rx()
-            ry  = self._read_ry()
+            rx = self._read_rx()
+            ry = self._read_ry()
 
         self._data.add_ellipse(Ellipse(cp.center, rx, ry, cp.way, cp.color))
         self.repaint()
@@ -112,19 +110,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rads, data = self._alg_tester.time_circle_test()
         GraphPlotter(rads, data)
 
-
     def _ellipse_timing_test_handler(self) -> None:
-        rads, data = self._alg_tester.time_ellipse_test()
-        GraphPlotter(rads, data)
-
-        # for key, value in test_result.items():
-            # print(f'{key} : {value}')
-        # print(test_result)
-
+        rads_y, data = self._alg_tester.time_ellipse_test()
+        GraphPlotter(rads_y, data)
 
     def bind_buttons(self) -> None:
         self.draw_figure_btn.clicked.connect(self._figure_rendering_handler)
-        self.draw_spectrum_btn.clicked.connect(self._spectrum_rendering_handler)
+        self.draw_spectrum_btn.clicked.connect(
+            self._spectrum_rendering_handler)
         self.clear_btn.clicked.connect(self._cleanup_handler)
         self.cmp_circle_btn.clicked.connect(self._circle_timing_test_handler)
         self.cmp_ellipse_btn.clicked.connect(self._ellipse_timing_test_handler)
@@ -165,7 +158,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         qp = QPainter(self)
         qp.drawPixmap(QRect(self.canvas.x_min, self.canvas.y_min, self.canvas.x_max,
                             self.canvas.y_max), self.canvas.surf)
-                            
+
         drawer = Drawer(qp)
         drawer.draw_ellipses(self._data.ellipses)
         drawer.draw_spectrums(self._data.spectrums)

@@ -8,6 +8,7 @@ from ellipse import Ellipse
 
 import utils
 
+
 class Spectrum:
     def __init__(self, figure: Figure, way: Way, color: Color, center: Point,
                  rx_start: int, ry_start: int, step: int, count: int) -> None:

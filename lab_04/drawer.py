@@ -1,8 +1,7 @@
-from typing import List, Union
+from typing import List
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen
 
-from point import Point
 from ellipse import Ellipse
 from spectrum import Spectrum
 

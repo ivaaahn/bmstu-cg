@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from point import Point
 
+
 class BarPlotter:
     def __init__(self, data: dict) -> None:
         self._names = [str(alg)[:10]+'\n'+str(alg)[10:] for alg in data.keys()]
@@ -20,6 +21,7 @@ class BarPlotter:
 
         plt.show()
 
+
 class GraphPlotter:
     def __init__(self, rads: Tuple[int], data: Dict[Callable[[Point, int], List[Point]], float]) -> None:
         self._rads = rads
@@ -29,13 +31,9 @@ class GraphPlotter:
         plt.xlabel('Радиус окружности', fontsize=12, color='blue')
         plt.ylabel('Время выполнения (мкс)', fontsize=12, color='red')
 
-        # print(rads)
-
-        # for key, value in self._data.items():
-        #     print(f'{key}: {value}')
-
         for alg, time in data.items():
-            plt.plot(self._rads, time, label=str(Algorithms.get_way_and_figure(alg)[0]))
+            plt.plot(self._rads, time, label=str(
+                Algorithms.get_way_and_figure(alg)[0]))
 
         plt.grid(True)
         plt.legend()
