@@ -1,22 +1,27 @@
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QGuiApplication as QGuiApp
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, QColor
 from PyQt5.QtWidgets import QLabel
 
+import utils
 from algorithms import Algorithms
-from properties.color import Color
 from models.figure import Figure
-from properties.mode import Mode
 from models.point import Point
+from properties.color import Color
+from properties.mode import Mode
 from utils import delay
 
 
 class Canvas(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.w, self.h = 771, 663
         self.img = self._new_image()
         self._update_pixmap()
-        self.figure = Figure()
+        self._figure = Figure()
+
+    @property
+    def figure(self) -> Figure:
+        return self._figure
 
     def clear(self) -> None:
         self.figure.clear()
@@ -26,11 +31,12 @@ class Canvas(QLabel):
     def mousePressEvent(self, event):
         position = Point(event.pos().x(), event.pos().y())
         if event.buttons() == Qt.LeftButton:
-            self.add_point_controller(position)
+            exactly = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
+            self.add_point_controller(position, exactly=exactly)
         elif event.buttons() == Qt.RightButton:
             self.close_poly_controller()
 
-    def fill(self, figure_color: Color, mode: Mode):
+    def fill(self, figure_color: Color, mode: Mode) -> None:
         self.mode = mode
         self.figure.color = figure_color
         self.img = self._new_image()
@@ -45,8 +51,8 @@ class Canvas(QLabel):
         def change_color(c) -> QColor:
             return bg_color if (c == figure_color) else figure_color
 
-        for y in range(p_max.y, p_min.y - 1, -1):
-            for x in range(p_min.x, p_max.x + 1, 1):
+        for y in range(p_min.y, p_max.y + 1):
+            for x in range(p_min.x, p_max.x + 1):
                 if self.img.pixelColor(x, y) == mark_color:
                     curr_color = change_color(curr_color)
 
@@ -56,7 +62,8 @@ class Canvas(QLabel):
                 delay()
                 self._update_pixmap()
 
-        self._update_pixmap()
+        if self.mode is not Mode.TESTING:
+            self._update_pixmap()
 
     def handle_outline(self) -> None:
         polygons = self.figure.all_polygons
@@ -66,7 +73,6 @@ class Canvas(QLabel):
             extrema = poly.all_extrema
 
             for i in range(length):
-                print(i, (i + 1) % length)
                 self._handle_segment(vertices[i], vertices[(i + 1) % length],
                                      [i in extrema, (i + 1) % length in extrema])
 
@@ -79,9 +85,9 @@ class Canvas(QLabel):
             is_extremum.reverse()
 
         dy, dx = 1, (p1.x - p0.x) / (p1.y - p0.y)
-
         curr_p = Point(p0.x, p0.y)
         mark_color = self.figure.get_mark_color().toQcolor()
+
         while curr_p.y < p1.y:
             if self.img.pixelColor(int(curr_p.x + 0.5), int(curr_p.y)) != mark_color:
                 self.img.setPixelColor(int(curr_p.x + 0.5), int(curr_p.y), mark_color)
@@ -96,7 +102,7 @@ class Canvas(QLabel):
             curr_p.y += dy
 
     def _new_image(self) -> QImage:
-        img = QImage(self.w, self.h, QImage.Format_ARGB32_Premultiplied)
+        img = QImage(utils.W, utils.H, QImage.Format_ARGB32_Premultiplied)
         img.fill(Qt.white)
         return img
 
@@ -104,7 +110,16 @@ class Canvas(QLabel):
         self.pixmap = QPixmap().fromImage(self.img)
         self.setPixmap(self.pixmap)
 
-    def add_point_controller(self, pos: Point) -> None:
+    def add_point_controller(self, pos: Point, exactly: bool = False) -> None:
+        if exactly and self.figure.last_polygon.size():
+            last_vertex = self.figure.last_polygon.last_vrtx
+            dx, dy = abs(pos.x - last_vertex.x), abs(pos.y - last_vertex.y)
+
+            if dx < dy:
+                pos.x = last_vertex.x
+            else:
+                pos.y = last_vertex.y
+
         self.figure.add_vertex(pos)
 
         qp = QPainter(self.img)
@@ -116,13 +131,15 @@ class Canvas(QLabel):
             Algorithms.dda(self.img, last_poly.pre_last_vrtx, last_poly.last_vrtx)
 
         qp.end()
-        self.pixmap = QPixmap().fromImage(self.img)
-        self.setPixmap(self.pixmap)
+        self._update_pixmap()
 
     def close_poly_controller(self) -> None:
+        last_poly = self.figure.last_polygon
+        if last_poly.size() < 3:
+            return
+
         qp = QPainter(self.img)
         qp.setPen(QPen(Qt.black, 1))
-        last_poly = self.figure.last_polygon
         Algorithms.dda(self.img, last_poly.first_vrtx, last_poly.last_vrtx)
         qp.end()
 

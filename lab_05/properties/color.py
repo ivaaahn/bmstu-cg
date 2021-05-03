@@ -10,15 +10,23 @@ class Color(Enum):
     RED = 1
     BLUE = 2
     BLACK = 3
-    GREEN = 4
+    YELLOW = 4
+    ORANGE = 5
+    GRAY = 6
+    MAGENTA = 7
+    GREEN = -1
 
     def __str__(self) -> str:
         interp = {
-            ColorList.BG: 'Фоновый',
-            ColorList.RED: 'Красный',
-            ColorList.BLUE: 'Синий',
-            ColorList.BLACK: 'Черный',
-            ColorList.GREEN: 'Зеленый'
+            Color.BG: 'Фоновый',
+            Color.RED: 'Красный',
+            Color.BLUE: 'Синий',
+            Color.BLACK: 'Черный',
+            Color.YELLOW: 'Жёлтый',
+            Color.ORANGE: 'Оранжевый',
+            Color.GRAY: 'Серый',
+            Color.MAGENTA: 'Фиолетовый',
+            Color.GREEN: 'Зеленый'
         }
         return interp[self]
 
@@ -28,6 +36,10 @@ class Color(Enum):
             Color.RED: Qt.red,
             Color.BLUE: Qt.blue,
             Color.BLACK: Qt.black,
+            Color.YELLOW: Qt.yellow,
+            Color.ORANGE: QColor('#ffa500'),
+            Color.GRAY: Qt.gray,
+            Color.MAGENTA: Qt.magenta,
             Color.GREEN: Qt.green
         }
         return QColor(interp[self])

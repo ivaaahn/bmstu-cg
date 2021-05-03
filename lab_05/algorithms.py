@@ -1,18 +1,9 @@
 from PyQt5.QtGui import QImage
 
 import utils
-from properties.color import Color
 from models.point import Point
+from properties.color import Color
 
-
-# class AlgTester:
-#     def __init__(self) -> None:
-#         pass
-#
-#     def time_test(self):
-#         pass
-#
-#
 
 class Algorithms:
     @staticmethod

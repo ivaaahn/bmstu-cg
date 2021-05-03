@@ -1,3 +1,5 @@
+import numpy
+
 from algorithms import Algorithms
 from typing import Dict, Tuple, Callable, List
 import matplotlib.pyplot as plt
@@ -7,17 +9,24 @@ from models.point import Point
 
 class BarPlotter:
     def __init__(self, data: dict) -> None:
-        self._names = [str(alg)[:10]+'\n'+str(alg)[10:] for alg in data.keys()]
-        self._values = [round(value, 2) for value in data.values()]
-        self._fig, self._ax = plt.subplots(figsize=(14, 8))
+        labels = ['', 'Алгоритм заполнения со списком ребер и флагом.', '']
+        values = [0, data.get('time'), 0]
 
-        self._fig.suptitle('Замеры времени', fontsize=24)
+        x = numpy.arange(len(labels))
+        width = 0.35
 
-        self._ax.set_xlabel('мс', fontsize=18)
-        self._ax.barh(self._names, self._values)
+        fig, ax = plt.subplots()
+        rects = ax.bar(x, values, width)
 
-        for tick in self._ax.xaxis.get_major_ticks() + self._ax.yaxis.get_major_ticks():
-            tick.label.set_fontsize(14)
+        ax.set_ylabel('мс', fontsize=10)
+        ax.set_title('Алгоритмы', pad=0)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+
+        # ax.legend()
+        fig.suptitle(f'Результат: {round(data.get("time"), 2)} мс ({data.get("count")} повторений)', fontsize=15)
+
+        # ax.bar_label(rects, padding=3)
 
         plt.show()
 

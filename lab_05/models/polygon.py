@@ -25,8 +25,6 @@ class Polygon:
         if vert[curr_index].y == min([p.y for p in vert[-3:]]) or vert[curr_index].y == max([p.y for p in vert[-3:]]):
             self._extrema.append(curr_index)
 
-        print(self._extrema)
-
     def is_closed(self) -> bool:
         return len(self._vertices) > 1 and (self._vertices[0] == self._vertices[-1])
 
