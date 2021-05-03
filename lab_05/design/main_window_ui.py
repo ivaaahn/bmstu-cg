@@ -1045,5 +1045,5 @@ class Ui_MainWindow(object):
         self.clear_btn.setText(_translate("MainWindow", "Очистить холст"))
         self.time_measure_btn.setText(_translate("MainWindow", "Измерить время"))
 from canvas import Canvas
-from color import ColorList
-from mode import ModeList
+from properties.color import ColorList
+from properties.mode import ModeList

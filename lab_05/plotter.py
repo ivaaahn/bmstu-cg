@@ -2,7 +2,7 @@ from algorithms import Algorithms
 from typing import Dict, Tuple, Callable, List
 import matplotlib.pyplot as plt
 
-from point import Point
+from models.point import Point
 
 
 class BarPlotter:

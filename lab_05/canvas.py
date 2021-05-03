@@ -3,10 +3,10 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, QColor
 from PyQt5.QtWidgets import QLabel
 
 from algorithms import Algorithms
-from color import Color
-from figure import Figure
-from mode import Mode
-from point import Point
+from properties.color import Color
+from models.figure import Figure
+from properties.mode import Mode
+from models.point import Point
 from utils import delay
 
 

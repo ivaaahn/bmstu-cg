@@ -1,8 +1,8 @@
 from PyQt5.QtGui import QImage
 
 import utils
-from color import Color
-from point import Point
+from properties.color import Color
+from models.point import Point
 
 
 # class AlgTester:

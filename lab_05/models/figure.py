@@ -1,6 +1,6 @@
-from color import ColorList, Color
-from point import Point
-from polygon import Polygon
+from properties.color import Color
+from .point import Point
+from .polygon import Polygon
 
 
 class Figure:

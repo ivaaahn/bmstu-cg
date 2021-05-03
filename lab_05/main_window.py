@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMessageBox as QMB
 
 # from algorithms import AlgTester
 from design.main_window_ui import Ui_MainWindow
-from point import Point
+from models.point import Point
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
