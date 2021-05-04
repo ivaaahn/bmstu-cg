@@ -10,6 +10,7 @@ class Algorithms:
     def dda(img: QImage, p_begin: Point, p_end: Point):
         if p_begin == p_end:
             img.setPixelColor(p_begin.to_qpoint(), Color.RED.toQcolor())
+            return
 
         length = int(max(abs(p_end.x - p_begin.x), abs(p_end.y - p_begin.y)))
         dx = (p_end.x - p_begin.x) / length

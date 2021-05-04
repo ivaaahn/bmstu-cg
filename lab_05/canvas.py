@@ -9,7 +9,6 @@ from models.figure import Figure
 from models.point import Point
 from properties.color import Color
 from properties.mode import Mode
-from utils import delay
 
 
 class Canvas(QLabel):
@@ -36,7 +35,7 @@ class Canvas(QLabel):
         elif event.buttons() == Qt.RightButton:
             self.close_poly_controller()
 
-    def fill(self, figure_color: Color, mode: Mode) -> None:
+    def fill(self, figure_color: Color, mode: Mode):
         self.mode = mode
         self.figure.color = figure_color
         self.img = self._new_image()
@@ -51,19 +50,18 @@ class Canvas(QLabel):
         def change_color(c) -> QColor:
             return bg_color if (c == figure_color) else figure_color
 
-        for y in range(p_min.y, p_max.y + 1):
-            for x in range(p_min.x, p_max.x + 1):
+        for y in range(p_max.y, p_min.y - 1, -1):
+            for x in range(p_min.x, p_max.x + 1, 1):
                 if self.img.pixelColor(x, y) == mark_color:
                     curr_color = change_color(curr_color)
 
                 self.img.setPixelColor(x, y, curr_color)
 
             if self.mode is Mode.DELAY:
-                delay()
+                utils.delay()
                 self._update_pixmap()
 
-        if self.mode is not Mode.TESTING:
-            self._update_pixmap()
+        self._update_pixmap()
 
     def handle_outline(self) -> None:
         polygons = self.figure.all_polygons
@@ -95,7 +93,7 @@ class Canvas(QLabel):
                 self.img.setPixelColor(int(curr_p.x + 0.5), int(curr_p.y), Color.BG.toQcolor())
 
             if self.mode is Mode.DELAY:
-                delay()
+                utils.delay()
                 self._update_pixmap()
 
             curr_p.x += dx

@@ -1,4 +1,3 @@
-from random import randint
 import utils
 from properties.color import Color
 from .point import Point
@@ -9,17 +8,11 @@ class Figure:
     def __init__(self, color: Color = Color.BLACK) -> None:
         self._color = color
         self._data: list[Polygon] = [Polygon()]
-        self.p_min = Point(utils.W+10, utils.H+10)
+        self.p_min = Point(utils.W + 10, utils.H + 10)
         self.p_max = Point(-10, -10)
 
     def __bool__(self) -> bool:
         return not self.is_empty()
-
-    def generate(self):
-        for _ in range(20):
-            self.add_vertex(Point(randint(0, utils.W), randint(0, utils.H)))
-
-        self.close_this_polygon()
 
     def is_empty(self) -> bool:
         return len(self._data) == 1 and self.last_polygon.size() == 0
