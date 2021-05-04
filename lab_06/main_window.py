@@ -7,9 +7,7 @@ from PyQt5.QtWidgets import QMessageBox as QMB
 
 from design.main_window_ui import Ui_MainWindow
 from models.point import Point
-from plotter import BarPlotter
 from properties.mode import Mode
-from testing import TimeTesting
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):

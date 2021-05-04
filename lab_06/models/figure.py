@@ -1,6 +1,3 @@
-from random import randint
-from typing import Optional
-
 import utils
 from properties.color import Color
 from .point import Point
@@ -29,7 +26,7 @@ class Figure:
         self.p_min = Point(100000, 100000)
         self.p_max = Point(-100000, -100000)
         self._data = [Polygon()]
-        self._seed_pixel = None
+        self.seed_pixels.clear()
 
     def add_polygon(self) -> None:
         self._data.append(Polygon())
@@ -41,9 +38,6 @@ class Figure:
     @property
     def color(self) -> Color:
         return self._color
-
-    def get_mark_color(self) -> Color:
-        return Color.GREEN
 
     @color.setter
     def color(self, color: Color) -> None:

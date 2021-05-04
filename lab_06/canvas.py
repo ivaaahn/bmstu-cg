@@ -57,12 +57,12 @@ class Canvas(QLabel):
         Algorithms.dda(self.img, self.border_color_list.get(), Point(utils.W - 1, 0), Point(utils.W - 1, utils.H - 1))
 
     def fill(self, fill_color: Color, mode: Mode) -> None:
-        stack = []
+        # stack = []
         if not self.figure.seed_pixels:
             QMessageBox.critical(self, "Ошибка", "Необходимо установить затравочный пиксел!")
             return
-        else:
-            stack += self.figure.seed_pixels
+        # else:
+            # stack += self.figure.seed_pixels
 
         self.border_fill()
 
@@ -78,8 +78,8 @@ class Canvas(QLabel):
         def set_pix(pixel: Point, color: QColor) -> None:
             self.img.setPixelColor(pixel.to_qpoint(), color)
 
-        while stack:
-            p_curr = stack.pop()
+        while self.figure.seed_pixels:
+            p_curr = self.figure.seed_pixels.pop()
             set_pix(p_curr, fill_color)
             tmp_x = p_curr.x
 
@@ -114,7 +114,7 @@ class Canvas(QLabel):
                         x, y = p_curr.x, p_curr.y
                         if p_curr.x != rx or cmp_pix(p_curr, border_color) or cmp_pix(p_curr, fill_color):
                             x -= 1
-                        stack.append(Point(x, y))
+                        self.figure.seed_pixels.append(Point(x, y))
 
                     x_input = p_curr.x
                     while (cmp_pix(p_curr, border_color) or cmp_pix(p_curr, fill_color)) and p_curr.x < rx:
@@ -141,11 +141,11 @@ class Canvas(QLabel):
 
     def add_seed_pixel_controller(self, pos: Point) -> None:
         self.figure.add_seed_pixel(pos)
-        qp = QPainter(self.img)
-        qp.setPen(QPen(Qt.green, 5))
-        qp.drawPoint(pos.to_qpoint())
-        qp.end()
-        self._update_pixmap()
+        # qp = QPainter(self.img)
+        # qp.setPen(QPen(Qt.green, 5))
+        # qp.drawPoint(pos.to_qpoint())
+        # qp.end()
+        # self._update_pixmap()
 
     def add_point_controller(self, pos: Point, exactly: bool = False) -> None:
         if exactly and self.figure.last_polygon.size():
