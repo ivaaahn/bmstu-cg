@@ -20,7 +20,7 @@ class Canvas(QLabel):
         self._figure = Figure()
 
     # TODO это ужасно, и надо сделать иначе
-    def init_border_color_list(self, bcolor_list: ColorListBorder, fcolor_list: ColorListFill):
+    def init_color_lists(self, bcolor_list: ColorListBorder, fcolor_list: ColorListFill):
         self.border_color_list = bcolor_list
         self.fill_color_list = fcolor_list
 
