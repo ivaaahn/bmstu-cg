@@ -8,7 +8,7 @@ import utils
 from algorithms import Algorithms
 from models.figure import Figure
 from models.point import Point
-from properties.color import Color, ColorListBorder
+from properties.color import ColorListBorder, ColorListFill
 from properties.mode import Mode
 
 
@@ -20,8 +20,9 @@ class Canvas(QLabel):
         self._figure = Figure()
 
     # TODO это ужасно, и надо сделать иначе
-    def init_border_color_list(self, color_list: ColorListBorder):
-        self.border_color_list = color_list
+    def init_border_color_list(self, bcolor_list: ColorListBorder, fcolor_list: ColorListFill):
+        self.border_color_list = bcolor_list
+        self.fill_color_list = fcolor_list
 
     @property
     def figure(self) -> Figure:
@@ -56,20 +57,20 @@ class Canvas(QLabel):
         Algorithms.dda(self.img, self.border_color_list.get(), Point(0, utils.H - 1), Point(utils.W - 1, utils.H - 1))
         Algorithms.dda(self.img, self.border_color_list.get(), Point(utils.W - 1, 0), Point(utils.W - 1, utils.H - 1))
 
-    def fill(self, fill_color: Color, mode: Mode) -> None:
+    def fill(self, mode: Mode) -> None:
         # stack = []
         if not self.figure.seed_pixels:
             QMessageBox.critical(self, "Ошибка", "Необходимо установить затравочный пиксел!")
             return
         # else:
-            # stack += self.figure.seed_pixels
+        # stack += self.figure.seed_pixels
 
         self.border_fill()
 
         self.mode = mode
-        self.figure.color = fill_color
+        self.figure.color = self.fill_color_list.get()
 
-        fill_color = fill_color.toQColor()
+        fill_color = self.figure.color.toQColor()
         border_color = self.border_color_list.get().toQColor()
 
         def cmp_pix(pixel: Point, color: QColor) -> bool:
@@ -141,11 +142,8 @@ class Canvas(QLabel):
 
     def add_seed_pixel_controller(self, pos: Point) -> None:
         self.figure.add_seed_pixel(pos)
-        # qp = QPainter(self.img)
-        # qp.setPen(QPen(Qt.green, 5))
-        # qp.drawPoint(pos.to_qpoint())
-        # qp.end()
-        # self._update_pixmap()
+        self.img.setPixelColor(pos.to_qpoint(), self.fill_color_list.get().toQColor())
+        self._update_pixmap()
 
     def add_point_controller(self, pos: Point, exactly: bool = False) -> None:
         if exactly and self.figure.last_polygon.size():

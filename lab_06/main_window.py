@@ -15,7 +15,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.bind_buttons()
-        self.canvas.init_border_color_list(self.color_list_border)
+        self.canvas.init_border_color_list(self.color_list_border, self.color_list_fill)
 
     def _read_point_coords(self) -> Point:
         return Point(self.x_input.value(), self.y_input.value())
@@ -35,12 +35,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.time_info_lbl.setText(text)
 
     def _fill_controller(self) -> None:
-        fill_color, mode = self.color_list_fill.get(), self.mode_list.get()
+        mode = self.mode_list.get()
         result = None
         if mode is Mode.NO_DELAY:
-            result = timeit(lambda: self.canvas.fill(fill_color, mode), number=1) * 1000
+            result = timeit(lambda: self.canvas.fill(mode), number=1) * 1000
         else:
-            self.canvas.fill(fill_color, mode)
+            self.canvas.fill(mode)
 
         self.time_info_controller(result)
 
