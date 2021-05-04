@@ -1,3 +1,5 @@
+from typing import List
+
 from properties.color import Color
 from .point import Point
 from .polygon import Polygon
@@ -6,8 +8,8 @@ from .polygon import Polygon
 class Figure:
     def __init__(self, color: Color = Color.BLACK) -> None:
         self._color = color
-        self._data: list[Polygon] = [Polygon()]
-        self.seed_pixels: list[Point] = []
+        self._data: List[Polygon] = [Polygon()]
+        self.seed_pixels: List[Point] = []
 
     def __bool__(self) -> bool:
         return not self.is_empty()
@@ -26,7 +28,7 @@ class Figure:
         self._data.append(Polygon())
 
     @property
-    def all_polygons(self):
+    def all_polygons(self) -> List[Polygon]:
         return self._data
 
     @property
@@ -41,7 +43,7 @@ class Figure:
     def last_polygon(self) -> Polygon:
         return self._data[-1]
 
-    def add_vertex(self, vertex: Point):
+    def add_vertex(self, vertex: Point) -> None:
         self.last_polygon.add_vertex(vertex)
 
     def close_this_polygon(self) -> None:

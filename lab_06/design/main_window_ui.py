@@ -1326,7 +1326,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Лабораторная работа №5"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Лабораторная работа №6"))
         self.label_13.setText(_translate("MainWindow", "Параметры отрисовки"))
         self.b_label_4.setText(_translate("MainWindow", "Режим"))
         self.mode_list.setItemText(0, _translate("MainWindow", "Без задержки"))

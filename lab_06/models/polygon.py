@@ -1,9 +1,11 @@
+from typing import List
+
 from .point import Point
 
 
 class Polygon:
     def __init__(self):
-        self._vertices: list[Point] = []
+        self._vertices: List[Point] = []
 
     @property
     def all_vertices(self):
