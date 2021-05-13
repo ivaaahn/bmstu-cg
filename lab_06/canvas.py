@@ -113,7 +113,7 @@ class Canvas(QLabel):
 
                 while p_curr.x <= rx:
                     flag = False
-                    while not cmp_pix(p_curr, border_color) and not cmp_pix(p_curr, fill_color) and p_curr.x < rx:
+                    while not cmp_pix(p_curr, border_color) and not cmp_pix(p_curr, fill_color) and p_curr.x <= rx:
                         p_curr.x += 1
                         flag = True
 
@@ -124,7 +124,7 @@ class Canvas(QLabel):
                         stack.append(Point(x, y))
 
                     x_input = p_curr.x
-                    while (cmp_pix(p_curr, border_color) or cmp_pix(p_curr, fill_color)) and p_curr.x < rx:
+                    while (cmp_pix(p_curr, border_color) or cmp_pix(p_curr, fill_color)) and p_curr.x <= rx:
                         p_curr.x += 1
 
                     if p_curr.x == x_input:
@@ -182,7 +182,6 @@ class Canvas(QLabel):
 
         qp.end()
         self._update_pixmap()
-        print(self.figure.last_polygon.all_vertices)
 
     def close_poly_controller(self) -> None:
         last_poly = self.figure.last_polygon

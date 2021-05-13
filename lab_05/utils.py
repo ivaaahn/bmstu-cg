@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QEventLoop
 
-W, H = 771, 663
+W, H = 1208, 941
 
 
 def round(num: float) -> int:
