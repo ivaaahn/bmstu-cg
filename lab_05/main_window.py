@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 
 from design.main_window_ui import Ui_MainWindow
-from models.point import Point
+from models.point import Point, TitleGenerator
 from properties.mode import Mode
 
 
@@ -15,12 +15,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.bind_buttons()
+        self.canvas.init_points_table(self.points_table)
 
     def _read_point_coords(self) -> Point:
         return Point(self.x_input.value(), self.y_input.value())
 
     def _cleanup_controller(self) -> None:
         self.canvas.clear()
+        self.points_table.clear()
+        TitleGenerator.reset()
 
     def time_info_controller(self, result: Optional[float]) -> None:
         if result is not None:

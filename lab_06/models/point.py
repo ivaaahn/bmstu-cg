@@ -6,10 +6,38 @@ import numpy as np
 from PyQt5.QtCore import QPoint, QPointF
 
 
+class TitleGenerator:
+    _index = 0
+
+    @staticmethod
+    def generate() -> str:
+        TitleGenerator._index += 1
+        return 'P' + str(TitleGenerator._index)
+
+    @staticmethod
+    def reset() -> None:
+        TitleGenerator._index = 0
+
+
 class Point:
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float, y: float, title: str = None, need_title: bool = False):
         self._x = x
         self._y = y
+
+        if title:
+            self._title = title
+        elif need_title:
+            self._title = TitleGenerator.generate()
+        else:
+            self._title = None
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    def set_title(self, title=None) -> str:
+        self._title = title if title else TitleGenerator.generate()
+        return self.title
 
     @property
     def value(self) -> Tuple[float, float]:
@@ -73,3 +101,4 @@ class Point:
 
     def __sub__(self, other):
         return Point(self.x - other.x, self.y - other.y)
+

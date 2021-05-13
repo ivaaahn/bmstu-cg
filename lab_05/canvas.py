@@ -7,6 +7,7 @@ import utils
 from algorithms import Algorithms
 from models.figure import Figure
 from models.point import Point
+from points_table import PointsTable
 from properties.color import Color
 from properties.mode import Mode
 
@@ -17,6 +18,9 @@ class Canvas(QLabel):
         self.img = self._new_image()
         self._update_pixmap()
         self._figure = Figure()
+
+    def init_points_table(self, ptable: PointsTable):
+        self.ptable = ptable
 
     @property
     def figure(self) -> Figure:
@@ -61,6 +65,7 @@ class Canvas(QLabel):
                 utils.delay()
                 self._update_pixmap()
 
+        self._redraw_borders_and_points()
         self._update_pixmap()
 
     def handle_outline(self) -> None:
@@ -109,6 +114,8 @@ class Canvas(QLabel):
         self.setPixmap(self.pixmap)
 
     def add_point_controller(self, pos: Point, exactly: bool = False) -> None:
+        pos.set_title()
+
         if exactly and self.figure.last_polygon.size():
             last_vertex = self.figure.last_polygon.last_vrtx
             dx, dy = abs(pos.x - last_vertex.x), abs(pos.y - last_vertex.y)
@@ -119,10 +126,12 @@ class Canvas(QLabel):
                 pos.y = last_vertex.y
 
         self.figure.add_vertex(pos)
+        self.ptable.add(pos)
 
         qp = QPainter(self.img)
         qp.setPen(QPen(Qt.blue, 4))
         qp.drawEllipse(pos.to_qpoint(), 2, 2)
+        qp.drawText(pos.x - 10, pos.y - 10, pos.title)
 
         last_poly = self.figure.last_polygon
         if last_poly.size() > 1:
@@ -131,6 +140,17 @@ class Canvas(QLabel):
         qp.end()
         self._update_pixmap()
 
+    def _redraw_borders_and_points(self) -> None:
+        qp = QPainter(self.img)
+        qp.setPen(QPen(Qt.blue, 4))
+        for poly in self.figure.all_polygons:
+            vert = poly.all_vertices
+            for i in range(len(vert) - 1):
+                Algorithms.dda(self.img, vert[i], vert[i+1])
+                qp.drawEllipse(vert[i].to_qpoint(), 2, 2)
+                qp.drawText(vert[i].x - 10, vert[i].y - 10, vert[i].title)
+        qp.end()
+
     def close_poly_controller(self) -> None:
         last_poly = self.figure.last_polygon
         if last_poly.size() < 3:
@@ -138,8 +158,8 @@ class Canvas(QLabel):
 
         qp = QPainter(self.img)
         qp.setPen(QPen(Qt.black, 1))
-        Algorithms.dda(self.img, last_poly.first_vrtx, last_poly.last_vrtx)
+        self.figure.close_this_polygon()
+        Algorithms.dda(self.img, last_poly.pre_last_vrtx, last_poly.last_vrtx)
         qp.end()
 
-        self.figure.close_this_polygon()
         self._update_pixmap()

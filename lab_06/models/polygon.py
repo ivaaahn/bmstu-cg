@@ -14,9 +14,6 @@ class Polygon:
     def add_vertex(self, vertex: Point) -> None:
         self._vertices.append(vertex)
 
-    def is_closed(self) -> bool:
-        return len(self._vertices) > 1 and (self._vertices[0] == self._vertices[-1])
-
     def close(self) -> None:
         self.add_vertex(self._vertices[0])
 

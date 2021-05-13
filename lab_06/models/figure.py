@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from properties.color import Color
 from .point import Point
@@ -9,20 +9,25 @@ class Figure:
     def __init__(self, color: Color = Color.BLACK) -> None:
         self._color = color
         self._data: List[Polygon] = [Polygon()]
-        self.seed_pixels: List[Point] = []
+        self._seed_pixel: Optional[Point] = None
 
     def __bool__(self) -> bool:
         return not self.is_empty()
 
-    def add_seed_pixel(self, pixel: Point):
-        self.seed_pixels.append(pixel)
+    @property
+    def seed_pixel(self) -> Optional[Point]:
+        return self._seed_pixel
+
+    @seed_pixel.setter
+    def seed_pixel(self, pixel: Point) -> None:
+        self._seed_pixel = pixel
 
     def is_empty(self) -> bool:
         return len(self._data) == 1 and self.last_polygon.size() == 0
 
     def clear(self) -> None:
         self._data = [Polygon()]
-        self.seed_pixels.clear()
+        self._seed_pixel = None
 
     def add_polygon(self) -> None:
         self._data.append(Polygon())

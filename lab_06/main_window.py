@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 
 from design.main_window_ui import Ui_MainWindow
-from models.point import Point
+from models.point import Point, TitleGenerator
 from properties.mode import Mode
 
 
@@ -15,16 +15,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.bind_buttons()
-        self.canvas.init_color_lists(self.color_list_border, self.color_list_fill)
+        self.canvas.init_widgets(self.color_list_border, self.color_list_fill, self.points_table, self.seed_pixel_info_lbl)
 
     def _read_point_coords(self) -> Point:
         return Point(self.x_input.value(), self.y_input.value())
 
     def _read_seed_pixel_coords(self) -> Point:
-        return Point(self.x_seed_input.value(), self.y_seed_input.value())
+        return Point(self.x_input.value(), self.y_input.value())
 
     def _cleanup_controller(self) -> None:
         self.canvas.clear()
+        self.points_table.clear()
+        TitleGenerator.reset()
 
     def time_info_controller(self, result: Optional[float]) -> None:
         if result is not None:
@@ -46,7 +48,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def bind_buttons(self) -> None:
         self.set_seed_pixel_btn.clicked.connect(
-            lambda: self.canvas.add_seed_pixel_controller(self._read_seed_pixel_coords()))
+            lambda: self.canvas.set_seed_pixel_controller(self._read_seed_pixel_coords()))
         self.add_point_btn.clicked.connect(lambda: self.canvas.add_point_controller(self._read_point_coords()))
         self.close_figure_btn.clicked.connect(self.canvas.close_poly_controller)
         self.fill_btn.clicked.connect(self._fill_controller)

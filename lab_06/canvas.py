@@ -1,3 +1,5 @@
+from typing import List
+
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication as QGuiApp
@@ -8,7 +10,8 @@ import utils
 from algorithms import Algorithms
 from models.figure import Figure
 from models.point import Point
-from properties.color import ColorListBorder, ColorListFill
+from points_table import PointsTable
+from properties.color import ColorListBorder, ColorListFill, Color
 from properties.mode import Mode
 
 
@@ -20,9 +23,12 @@ class Canvas(QLabel):
         self._figure = Figure()
 
     # TODO это ужасно, и надо сделать иначе
-    def init_color_lists(self, bcolor_list: ColorListBorder, fcolor_list: ColorListFill):
+    def init_widgets(self, bcolor_list: ColorListBorder, fcolor_list: ColorListFill, ptable: PointsTable,
+                     seed_pix_lbl: QLabel):
         self.border_color_list = bcolor_list
         self.fill_color_list = fcolor_list
+        self.ptable = ptable
+        self.seed_pixel_info_lbl = seed_pix_lbl
 
     @property
     def figure(self) -> Figure:
@@ -37,7 +43,7 @@ class Canvas(QLabel):
         position = Point(ev.pos().x(), ev.pos().y())
         if ev.buttons() == Qt.LeftButton:
             if QGuiApp.keyboardModifiers() & Qt.ControlModifier:
-                self.add_seed_pixel_controller(Point(ev.pos().x(), ev.pos().y()))
+                self.set_seed_pixel_controller(Point(ev.pos().x(), ev.pos().y()))
             else:
                 exactly = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
                 self.add_point_controller(position, exactly=exactly)
@@ -58,12 +64,12 @@ class Canvas(QLabel):
         Algorithms.dda(self.img, self.border_color_list.get(), Point(utils.W - 1, 0), Point(utils.W - 1, utils.H - 1))
 
     def fill(self, mode: Mode) -> None:
-        # stack = []
-        if not self.figure.seed_pixels:
+        stack: List[Point] = []
+        if self.figure.seed_pixel is None:
             QMessageBox.critical(self, "Ошибка", "Необходимо установить затравочный пиксел!")
             return
-        # else:
-        # stack += self.figure.seed_pixels
+        else:
+            stack.append(self.figure.seed_pixel)
 
         self.border_fill()
 
@@ -79,8 +85,8 @@ class Canvas(QLabel):
         def set_pix(pixel: Point, color: QColor) -> None:
             self.img.setPixelColor(pixel.to_qpoint(), color)
 
-        while self.figure.seed_pixels:
-            p_curr = self.figure.seed_pixels.pop()
+        while stack:
+            p_curr = stack.pop()
             set_pix(p_curr, fill_color)
             tmp_x = p_curr.x
 
@@ -115,7 +121,7 @@ class Canvas(QLabel):
                         x, y = p_curr.x, p_curr.y
                         if p_curr.x != rx or cmp_pix(p_curr, border_color) or cmp_pix(p_curr, fill_color):
                             x -= 1
-                        self.figure.seed_pixels.append(Point(x, y))
+                        stack.append(Point(x, y))
 
                     x_input = p_curr.x
                     while (cmp_pix(p_curr, border_color) or cmp_pix(p_curr, fill_color)) and p_curr.x < rx:
@@ -127,7 +133,7 @@ class Canvas(QLabel):
             if self.mode is Mode.DELAY:
                 utils.delay()
                 self._update_pixmap()
-
+        self._redraw_points()
         self._update_pixmap()
 
     @staticmethod
@@ -140,12 +146,20 @@ class Canvas(QLabel):
         self.pixmap = QPixmap().fromImage(self.img)
         self.setPixmap(self.pixmap)
 
-    def add_seed_pixel_controller(self, pos: Point) -> None:
-        self.figure.add_seed_pixel(pos)
+    def set_seed_pixel_controller(self, pos: Point) -> None:
+        if self.figure.seed_pixel is not None:
+            last_pos = self.figure.seed_pixel
+            self.img.setPixelColor(last_pos.to_qpoint(), Color.BG.toQColor())
+            self._redraw_borders_and_points()
+
+        self.figure.seed_pixel = pos
+        self.seed_pixel_info_lbl.setText(f"Затравочный пиксел: {pos.value}")
         self.img.setPixelColor(pos.to_qpoint(), self.fill_color_list.get().toQColor())
         self._update_pixmap()
 
     def add_point_controller(self, pos: Point, exactly: bool = False) -> None:
+        pos.set_title()
+        self.ptable.add(pos)
         if exactly and self.figure.last_polygon.size():
             last_vertex = self.figure.last_polygon.last_vrtx
             dx, dy = abs(pos.x - last_vertex.x), abs(pos.y - last_vertex.y)
@@ -158,8 +172,9 @@ class Canvas(QLabel):
         self.figure.add_vertex(pos)
 
         qp = QPainter(self.img)
-        qp.setPen(QPen(Qt.gray, 4))
+        qp.setPen(QPen(self.border_color_list.get().toQColor(), 4))
         qp.drawEllipse(pos.to_qpoint(), 2, 2)
+        qp.drawText(pos.x - 10, pos.y - 10, pos.title)
 
         last_poly = self.figure.last_polygon
         if last_poly.size() > 1:
@@ -167,16 +182,36 @@ class Canvas(QLabel):
 
         qp.end()
         self._update_pixmap()
+        print(self.figure.last_polygon.all_vertices)
 
     def close_poly_controller(self) -> None:
         last_poly = self.figure.last_polygon
         if last_poly.size() < 3:
             return
 
+        self.figure.close_this_polygon()
+        Algorithms.dda(self.img, self.border_color_list.get(), last_poly.last_vrtx, last_poly.pre_last_vrtx)
+
+        self._update_pixmap()
+
+    def _draw_point(self, qp: QPainter, point: Point) -> None:
+        qp.drawEllipse(point.to_qpoint(), 2, 2)
+        qp.drawText(point.x - 10, point.y - 10, point.title)
+
+    def _redraw_points(self) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(Qt.black, 1))
-        Algorithms.dda(self.img, self.border_color_list.get(), last_poly.first_vrtx, last_poly.last_vrtx)
+        qp.setPen(QPen(self.border_color_list.get().toQColor(), 4))
+        for poly in self.figure.all_polygons:
+            for vert in poly.all_vertices:
+                self._draw_point(qp, vert)
         qp.end()
 
-        self.figure.close_this_polygon()
-        self._update_pixmap()
+    def _redraw_borders_and_points(self) -> None:
+        qp = QPainter(self.img)
+        qp.setPen(QPen(self.border_color_list.get().toQColor(), 4))
+        for poly in self.figure.all_polygons:
+            vert = poly.all_vertices
+            for i in range(len(vert) - 1):
+                self._draw_point(qp, vert[i])
+                Algorithms.dda(self.img, self.border_color_list.get(), vert[i], vert[i + 1])
+        qp.end()
