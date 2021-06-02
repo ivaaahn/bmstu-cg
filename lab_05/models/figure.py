@@ -5,7 +5,7 @@ from .polygon import Polygon
 
 
 class Figure:
-    def __init__(self, color: Color = Color.BLACK) -> None:
+    def __init__(self, color: Color = Color.MAGENTA) -> None:
         self._color = color
         self._data: list[Polygon] = [Polygon()]
         self.p_min = Point(utils.W + 10, utils.H + 10)
@@ -32,9 +32,6 @@ class Figure:
     @property
     def color(self) -> Color:
         return self._color
-
-    def get_mark_color(self) -> Color:
-        return Color.GREEN
 
     @color.setter
     def color(self, color: Color) -> None:

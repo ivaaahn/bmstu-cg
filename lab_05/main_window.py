@@ -15,7 +15,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.bind_buttons()
-        self.canvas.init_points_table(self.points_table)
+        self.canvas.init_other(self.points_table, self.color_list_border)
 
     def _read_point_coords(self) -> Point:
         return Point(self.x_input.value(), self.y_input.value())
