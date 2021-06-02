@@ -8,9 +8,8 @@ from algorithms import Algorithms
 from models.figure import Figure
 from models.point import Point
 from points_table import PointsTable
-from properties.color import Color
+from properties.color import Color, ColorListBorder, ColorList
 from properties.mode import Mode
-
 
 class Canvas(QLabel):
     def __init__(self, parent):
@@ -19,8 +18,9 @@ class Canvas(QLabel):
         self._update_pixmap()
         self._figure = Figure()
 
-    def init_points_table(self, ptable: PointsTable):
+    def init_other(self, ptable: PointsTable, bcolor_list: ColorListBorder):
         self.ptable = ptable
+        self.bcolor_list = bcolor_list
 
     @property
     def figure(self) -> Figure:
@@ -46,7 +46,7 @@ class Canvas(QLabel):
         self.handle_outline()
 
         p_min, p_max = self.figure.p_min, self.figure.p_max
-        mark_color = self.figure.get_mark_color().toQcolor()
+        mark_color = Color.FLAG.toQcolor()
         bg_color = Color.BG.toQcolor()
         figure_color = figure_color.toQcolor()
         curr_color = bg_color
@@ -89,7 +89,7 @@ class Canvas(QLabel):
 
         dy, dx = 1, (p1.x - p0.x) / (p1.y - p0.y)
         curr_p = Point(p0.x, p0.y)
-        mark_color = self.figure.get_mark_color().toQcolor()
+        mark_color = Color.FLAG.toQcolor()
 
         while curr_p.y < p1.y:
             if self.img.pixelColor(int(curr_p.x + 0.5), int(curr_p.y)) != mark_color:
@@ -103,6 +103,10 @@ class Canvas(QLabel):
 
             curr_p.x += dx
             curr_p.y += dy
+
+        # if self.mode is Mode.DELAY:
+        #     utils.delay()
+        #     self._update_pixmap()
 
     def _new_image(self) -> QImage:
         img = QImage(utils.W, utils.H, QImage.Format_ARGB32_Premultiplied)
@@ -129,24 +133,27 @@ class Canvas(QLabel):
         self.ptable.add(pos)
 
         qp = QPainter(self.img)
-        qp.setPen(QPen(Qt.blue, 4))
+        qp.setPen(QPen(Color.POINT.toQcolor(), 4))
         qp.drawEllipse(pos.to_qpoint(), 2, 2)
         qp.drawText(pos.x - 10, pos.y - 10, pos.title)
 
         last_poly = self.figure.last_polygon
+        edge_color = self.bcolor_list.get().toQcolor()
         if last_poly.size() > 1:
-            Algorithms.dda(self.img, last_poly.pre_last_vrtx, last_poly.last_vrtx)
+            Algorithms.dda(self.img, last_poly.pre_last_vrtx, last_poly.last_vrtx, edge_color)
 
         qp.end()
         self._update_pixmap()
 
     def _redraw_borders_and_points(self) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(Qt.blue, 4))
+        qp.setPen(QPen(Color.POINT.toQcolor(), 4))
+        edge_color = self.bcolor_list.get().toQcolor()
+
         for poly in self.figure.all_polygons:
             vert = poly.all_vertices
             for i in range(len(vert) - 1):
-                Algorithms.dda(self.img, vert[i], vert[i+1])
+                Algorithms.dda(self.img, vert[i], vert[i + 1], edge_color)
                 qp.drawEllipse(vert[i].to_qpoint(), 2, 2)
                 qp.drawText(vert[i].x - 10, vert[i].y - 10, vert[i].title)
         qp.end()
@@ -159,7 +166,8 @@ class Canvas(QLabel):
         qp = QPainter(self.img)
         qp.setPen(QPen(Qt.black, 1))
         self.figure.close_this_polygon()
-        Algorithms.dda(self.img, last_poly.pre_last_vrtx, last_poly.last_vrtx)
+        edge_color = self.bcolor_list.get().toQcolor()
+        Algorithms.dda(self.img, last_poly.pre_last_vrtx, last_poly.last_vrtx, edge_color)
         qp.end()
 
         self._update_pixmap()
