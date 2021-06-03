@@ -14,7 +14,7 @@ from models.segment import Segment
 from properties.color import ColorListCutter, ColorListSegment, ColorListResult
 from properties.mode import Mode, ModeList
 
-INTO = 0b000
+INTO = 0b0000
 LEFT = 0b0001
 RIGHT = 0b0010
 BOTTOM = 0b0100
@@ -78,7 +78,7 @@ class Canvas(QLabel):
         self.set_bits(seg)
 
         # Полностью видимый
-        if seg.p1.code == 0 and seg.p2.code == 0:
+        if not(seg.p1.code | seg.p2.code):
             self.draw_segment(seg, result=True)
             return
 
@@ -120,9 +120,8 @@ class Canvas(QLabel):
                     result.append(Point(cutter.right, y))
                     continue
 
-            # заметим, что в случае горизонтальной прямой сюда мы не попадем
+            # Заметим, что в случае горизонтальной прямой сюда мы не попадем
             # горизонтальная прямая либо обработается в самом начале подпрограммы, либо выше
-
             if point.code & TOP:
                 x = round((cutter.top - point.y) / m + point.x)
                 if cutter.left <= x <= cutter.right:
