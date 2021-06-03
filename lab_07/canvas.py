@@ -7,13 +7,12 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage
 from PyQt5.QtWidgets import QLabel, QMessageBox
 
 import utils
+from algorithms import Algorithms
 from models.cutter import Cutter
 from models.point import Point
 from models.segment import Segment
 from properties.color import ColorListCutter, ColorListSegment, ColorListResult
 from properties.mode import Mode, ModeList
-
-ACCURACY = 15
 
 INTO = 0b000
 LEFT = 0b0001
@@ -24,6 +23,7 @@ TOP = 0b1000
 
 class Canvas(QLabel):
     def __init__(self, parent):
+        self._accuracy = 15
         super().__init__(parent)
         self.img = self._new_image()
         self.update_pixmap()
@@ -36,6 +36,7 @@ class Canvas(QLabel):
                     segment_colors: ColorListSegment,
                     result_colors: ColorListResult):
         self._modes = modes_list
+        self._modes.currentTextChanged.connect(self.mode_changed)
         self._cutter_colors = cutter_colors
         self._segment_colors = segment_colors
         self._result_colors = result_colors
@@ -43,6 +44,9 @@ class Canvas(QLabel):
     def add_segment(self, segment: Segment) -> None:
         self._segments.append(segment)
         self.draw_segment(segment)
+
+    def mode_changed(self, value):
+        self._fst_click = None
 
     def set_cutter(self, cutter: Cutter) -> None:
         if self._cutter is not None:
@@ -72,92 +76,72 @@ class Canvas(QLabel):
     def handle_vertical_segment(self, point: Point) -> Point:
         if point.y > self._cutter.top:
             return Point(point.x, self._cutter.top)
-        elif point.y < self._cutter.bottom:
-            return Point(point.x, self._cutter.bottom)
         else:
-            return Point(point.x, point.y)
+            return Point(point.x, self._cutter.bottom)
 
     def handle_segment(self, seg: Segment):
         cutter = self._cutter
         self.set_bits(seg)
 
         # Полностью видимый
-        if seg.start.code == 0 and seg.end.code == 0:
+        if seg.p1.code == 0 and seg.p2.code == 0:
             self.draw_segment(seg, result=True)
             return
 
         # Полностью невидимый
-        if seg.start.code & seg.end.code != 0:
+        if seg.p1.code & seg.p2.code != 0:
             return
 
-        # Либо обе точки вне отсекателя, либо одна вне, а одна внутри.
-        # Если одна из точек лежит внутри, то отрезок пересекает только одну границу отсекателя.
-
-        FIRST = 0
-        SECOND = 1
-        points: List[Point] = seg.points
+        points_to_handle: List[Point] = []
         result: List[Point] = []
 
-        curr_index = 1
-        if points[FIRST].code == 0:
-            result.append(points[FIRST])
-        elif points[SECOND].code == 0:
-            result.append(points[SECOND])
-            points.reverse()
+        if seg.p1.code == 0:
+            result.append(seg.p1)
+            points_to_handle.append(seg.p2)
+        elif seg.p2.code == 0:
+            result.append(seg.p2)
+            points_to_handle.append(seg.p1)
         else:
-            curr_index = 0
+            points_to_handle.extend(seg.points)
 
-        while curr_index <= SECOND:
-
-            # Вертикальный отрезок обрабатываем отдельно
-            if points[FIRST].x == points[SECOND].x:
-                result.append(self.handle_vertical_segment(points[curr_index]))
-                curr_index += 1
+        for point in points_to_handle:
+            if seg.is_vertical():
+                if point.y > self._cutter.top:
+                    result.append(Point(point.x, self._cutter.top))
+                else:
+                    result.append(Point(point.x, self._cutter.bottom))
                 continue
 
-            m: float = (points[SECOND].y - points[FIRST].y) / (points[SECOND].x - points[FIRST].x)
+            m: float = seg.tangent
 
-            # Если текущая точка лежит слева от отсекателя
-            if points[curr_index].code & LEFT:
-                y = round(m * (cutter.left - points[curr_index].x) + points[curr_index].y)
-
+            if point.code & LEFT:
+                y = round(m * (cutter.left - point.x) + point.y)
                 if cutter.bottom <= y <= cutter.top:
                     result.append(Point(cutter.left, y))
-                    curr_index += 1
                     continue
 
-            elif points[curr_index].code & RIGHT:
-                y = round(m * (cutter.right - points[curr_index].x) + points[curr_index].y)
-
+            elif point.code & RIGHT:
+                y = round(m * (cutter.right - point.x) + point.y)
                 if cutter.bottom <= y <= cutter.top:
                     result.append(Point(cutter.right, y))
-                    curr_index += 1
                     continue
 
-            # Перед обработкой пересечений с верхней и нижней границей проверяем, что прямая не горизонтальная
-            # поскольку в этом случае мы ничего не найдем
-            if m == 0:
-                curr_index += 1
-                continue
+            # заметим, что в случае горизонтальной прямой сюда мы не попадем
+            # горизонтальная прямая либо обработается в самом начале подпрограммы, либо выше
 
-            if points[curr_index].code & TOP:
-                x = round((cutter.top - points[curr_index].y) / m + points[curr_index].x)
-
+            if point.code & TOP:
+                x = round((cutter.top - point.y) / m + point.x)
                 if cutter.left <= x <= cutter.right:
                     result.append(Point(x, cutter.top))
-                    curr_index += 1
                     continue
 
-            if points[curr_index].code & BOTTOM:
-                x = round((cutter.bottom - points[curr_index].y) / m + points[curr_index].x)
-
+            elif point.code & BOTTOM:
+                x = round((cutter.bottom - point.y) / m + point.x)
                 if cutter.left <= x <= cutter.right:
                     result.append(Point(x, cutter.bottom))
-                    curr_index += 1
                     continue
 
-            curr_index += 1
-
+        # Рассматриваемый отрезок мог быть полностью невидимым
         if result:
             self.draw_segment(Segment(result[0], result[1]), result=True)
 
@@ -197,14 +181,14 @@ class Canvas(QLabel):
         return Cutter(Point(min(p1.x, p2.x), max(p1.y, p2.y)), Point(max(p1.x, p2.x), min(p1.y, p2.y)))
 
     def cutter_is_nearly(self, pos: Point) -> None:
-        if abs(pos.x - self._cutter.right) <= ACCURACY:
+        if abs(pos.x - self._cutter.right) <= self._accuracy:
             pos.x = self._cutter.right
-        elif abs(pos.x - self._cutter.left) <= ACCURACY:
+        elif abs(pos.x - self._cutter.left) <= self._accuracy:
             pos.x = self._cutter.left
 
-        if abs(pos.y - self._cutter.top) <= ACCURACY:
+        if abs(pos.y - self._cutter.top) <= self._accuracy:
             pos.y = self._cutter.top
-        elif abs(pos.y - self._cutter.bottom) <= ACCURACY:
+        elif abs(pos.y - self._cutter.bottom) <= self._accuracy:
             pos.y = self._cutter.bottom
 
     def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
@@ -246,6 +230,7 @@ class Canvas(QLabel):
             color = self._segment_colors.get().toQColor()
 
         qp.setPen(QPen(color, width))
+        # Algorithms.dda(qp, segment.p1, segment.p2)
         qp.drawLine(segment.to_qline())
         qp.end()
         self.update_pixmap()

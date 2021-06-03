@@ -591,7 +591,7 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>1208</number>
+           <number>1218</number>
           </property>
           <property name="value">
            <number>300</number>
@@ -731,10 +731,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>1208</number>
+           <number>1218</number>
           </property>
           <property name="value">
-           <number>300</number>
+           <number>800</number>
           </property>
          </widget>
         </item>
@@ -1285,7 +1285,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Режим</string>
+         <string>Режим (для мыши)</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1369,10 +1369,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>1208</number>
+           <number>1218</number>
           </property>
           <property name="value">
-           <number>300</number>
+           <number>419</number>
           </property>
          </widget>
         </item>
@@ -1458,10 +1458,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>947</number>
+           <number>941</number>
           </property>
           <property name="value">
-           <number>500</number>
+           <number>200</number>
           </property>
          </widget>
         </item>
@@ -2120,10 +2120,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>947</number>
+           <number>941</number>
           </property>
           <property name="value">
-           <number>500</number>
+           <number>141</number>
           </property>
          </widget>
         </item>
@@ -2203,10 +2203,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>947</number>
+           <number>1218</number>
           </property>
           <property name="value">
-           <number>500</number>
+           <number>800</number>
           </property>
          </widget>
         </item>
@@ -2239,7 +2239,7 @@
          <bool>false</bool>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <item>
          <property name="text">
@@ -2392,10 +2392,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>947</number>
+           <number>941</number>
           </property>
           <property name="value">
-           <number>500</number>
+           <number>800</number>
           </property>
          </widget>
         </item>
@@ -2508,10 +2508,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>1208</number>
+           <number>941</number>
           </property>
           <property name="value">
-           <number>305</number>
+           <number>600</number>
           </property>
          </widget>
         </item>
