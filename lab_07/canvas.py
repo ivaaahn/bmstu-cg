@@ -1,10 +1,10 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QRect
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication as QGuiApp
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, QColor
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage
+from PyQt5.QtWidgets import QLabel, QMessageBox
 
 import utils
 from models.cutter import Cutter
@@ -13,8 +13,14 @@ from models.segment import Segment
 from properties.color import ColorListCutter, ColorListSegment, ColorListResult
 from properties.mode import Mode, ModeList
 
-
 ACCURACY = 15
+
+INTO = 0b000
+LEFT = 0b0001
+RIGHT = 0b0010
+BOTTOM = 0b0100
+TOP = 0b1000
+
 
 class Canvas(QLabel):
     def __init__(self, parent):
@@ -46,8 +52,122 @@ class Canvas(QLabel):
         self._cutter = cutter
         self.draw_cutter(cutter)
 
+    def set_bits(self, segment: Segment):
+        cutter = self._cutter
+
+        for point in segment.points:
+            code = 0b0000
+            if point.x < cutter.left:
+                code |= LEFT
+            elif point.x > cutter.right:
+                code |= RIGHT
+
+            if point.y < cutter.bottom:
+                code |= BOTTOM
+            elif point.y > cutter.top:
+                code |= TOP
+
+            point.code = code
+
+    def handle_vertical_segment(self, point: Point) -> Point:
+        if point.y > self._cutter.top:
+            return Point(point.x, self._cutter.top)
+        elif point.y < self._cutter.bottom:
+            return Point(point.x, self._cutter.bottom)
+        else:
+            return Point(point.x, point.y)
+
+    def handle_segment(self, seg: Segment):
+        cutter = self._cutter
+        self.set_bits(seg)
+
+        # Полностью видимый
+        if seg.start.code == 0 and seg.end.code == 0:
+            self.draw_segment(seg, result=True)
+            return
+
+        # Полностью невидимый
+        if seg.start.code & seg.end.code != 0:
+            return
+
+        # Либо обе точки вне отсекателя, либо одна вне, а одна внутри.
+        # Если одна из точек лежит внутри, то отрезок пересекает только одну границу отсекателя.
+
+        FIRST = 0
+        SECOND = 1
+        points: List[Point] = seg.points
+        result: List[Point] = []
+
+        curr_index = 1
+        if points[FIRST].code == 0:
+            result.append(points[FIRST])
+        elif points[SECOND].code == 0:
+            result.append(points[SECOND])
+            points.reverse()
+        else:
+            curr_index = 0
+
+        while curr_index <= SECOND:
+
+            # Вертикальный отрезок обрабатываем отдельно
+            if points[FIRST].x == points[SECOND].x:
+                result.append(self.handle_vertical_segment(points[curr_index]))
+                curr_index += 1
+                continue
+
+            m: float = (points[SECOND].y - points[FIRST].y) / (points[SECOND].x - points[FIRST].x)
+
+            # Если текущая точка лежит слева от отсекателя
+            if points[curr_index].code & LEFT:
+                y = round(m * (cutter.left - points[curr_index].x) + points[curr_index].y)
+
+                if cutter.bottom <= y <= cutter.top:
+                    result.append(Point(cutter.left, y))
+                    curr_index += 1
+                    continue
+
+            elif points[curr_index].code & RIGHT:
+                y = round(m * (cutter.right - points[curr_index].x) + points[curr_index].y)
+
+                if cutter.bottom <= y <= cutter.top:
+                    result.append(Point(cutter.right, y))
+                    curr_index += 1
+                    continue
+
+            # Перед обработкой пересечений с верхней и нижней границей проверяем, что прямая не горизонтальная
+            # поскольку в этом случае мы ничего не найдем
+            if m == 0:
+                curr_index += 1
+                continue
+
+            if points[curr_index].code & TOP:
+                x = round((cutter.top - points[curr_index].y) / m + points[curr_index].x)
+
+                if cutter.left <= x <= cutter.right:
+                    result.append(Point(x, cutter.top))
+                    curr_index += 1
+                    continue
+
+            if points[curr_index].code & BOTTOM:
+                x = round((cutter.bottom - points[curr_index].y) / m + points[curr_index].x)
+
+                if cutter.left <= x <= cutter.right:
+                    result.append(Point(x, cutter.bottom))
+                    curr_index += 1
+                    continue
+
+            curr_index += 1
+
+        if result:
+            self.draw_segment(Segment(result[0], result[1]), result=True)
+
     def cut(self) -> None:
-        pass
+        if self._cutter is None:
+            QMessageBox.critical(self, "Ошибка", "Необходимо установить отсекатель")
+            return
+
+        for segment in self._segments:
+            self.handle_segment(segment)
 
     def clear_all(self) -> None:
         self.clear_canvas()
@@ -87,17 +207,12 @@ class Canvas(QLabel):
         elif abs(pos.y - self._cutter.bottom) <= ACCURACY:
             pos.y = self._cutter.bottom
 
-        # return pos
-
     def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
-        position = Point(ev.pos().x(), ev.pos().y()-10)
+        position = Point(ev.pos().x(), ev.pos().y() - 10)
 
         if ev.buttons() == Qt.LeftButton:
             if self._cutter is not None and self._modes.get() == Mode.SEGMENTS:
-                print(self._cutter.ltop, self._cutter.rbottom)
-                print("before", position)
                 self.cutter_is_nearly(position)
-                print("after", position)
 
             if self._fst_click is not None:
                 if self._modes.get() == Mode.SEGMENTS:
@@ -121,18 +236,23 @@ class Canvas(QLabel):
         self.pixmap = QPixmap().fromImage(self.img)
         self.setPixmap(self.pixmap)
 
-    def draw_segment(self, segment: Segment) -> None:
+    def draw_segment(self, segment: Segment, result: bool = False) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(self._segment_colors.get().toQColor(), 1))  # TODO толщинааа
-        print(segment.to_qline())
+        if result:
+            width = 2
+            color = self._result_colors.get().toQColor()
+        else:
+            width = 1
+            color = self._segment_colors.get().toQColor()
+
+        qp.setPen(QPen(color, width))
         qp.drawLine(segment.to_qline())
         qp.end()
-
         self.update_pixmap()
 
     def draw_cutter(self, cutter: Cutter) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(self._cutter_colors.get().toQColor(), 1))  # TODO толщинааа
+        qp.setPen(QPen(self._cutter_colors.get().toQColor(), 1))
         for segment in cutter.get_lines():
             qp.drawLine(segment.to_qline())
         qp.end()
@@ -140,7 +260,7 @@ class Canvas(QLabel):
 
     def redraw_segments(self) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(self._segment_colors.get().toQColor(), 1))  # TODO толщинааа
+        qp.setPen(QPen(self._segment_colors.get().toQColor(), 1))
         for segment in self._segments:
             qp.drawLine(segment.to_qline())
         qp.end()

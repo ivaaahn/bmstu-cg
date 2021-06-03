@@ -1,13 +1,12 @@
 from __future__ import division
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 import numpy as np
 from PyQt5.QtCore import QPoint, QPointF
 
-
 class Point:
-    def __init__(self, x: float, y: float, code: int = None):
+    def __init__(self, x: int, y: int, code: Optional[int] = None):
         self._x = x
         self._y = y
         self._code = code
@@ -16,21 +15,21 @@ class Point:
     def code(self) -> int:
         return self._code
 
-    @code.setter
-    def code(self, value: int) -> None:
-        self._code = value
-
     @property
-    def value(self) -> Tuple[float, float]:
+    def value(self) -> Tuple[int, int]:
         return self.x, self.y
 
     @property
-    def x(self) -> float:
+    def x(self) -> int:
         return self._x
 
     @property
-    def y(self) -> float:
+    def y(self) -> int:
         return self._y
+
+    @code.setter
+    def code(self, code: int) -> None:
+        self._code = code
 
     @x.setter
     def x(self, value) -> None:
