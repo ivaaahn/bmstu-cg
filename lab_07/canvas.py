@@ -73,12 +73,6 @@ class Canvas(QLabel):
 
             point.code = code
 
-    def handle_vertical_segment(self, point: Point) -> Point:
-        if point.y > self._cutter.top:
-            return Point(point.x, self._cutter.top)
-        else:
-            return Point(point.x, self._cutter.bottom)
-
     def handle_segment(self, seg: Segment):
         cutter = self._cutter
         self.set_bits(seg)
