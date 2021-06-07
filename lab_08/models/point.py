@@ -5,38 +5,34 @@ from typing import Tuple, Optional
 import numpy as np
 from PyQt5.QtCore import QPoint, QPointF
 
+
 class Point:
-    def __init__(self, x: int, y: int, code: Optional[int] = None):
+    def __init__(self, x: [float, int], y: [float, int]):
         self._x = x
         self._y = y
-        self._code = code
 
     @property
-    def code(self) -> int:
+    def code(self) -> [float, int]:
         return self._code
 
     @property
-    def value(self) -> Tuple[int, int]:
+    def value(self) -> [Tuple[int, int], Tuple[float, float]]:
         return self.x, self.y
 
     @property
-    def x(self) -> int:
+    def x(self) -> [float, int]:
         return self._x
 
     @property
-    def y(self) -> int:
+    def y(self) -> [float, int]:
         return self._y
 
-    @code.setter
-    def code(self, code: int) -> None:
-        self._code = code
-
     @x.setter
-    def x(self, value) -> None:
+    def x(self, value: [float, int]) -> None:
         self._x = value
 
     @y.setter
-    def y(self, value) -> None:
+    def y(self, value: [float, int]) -> None:
         self._y = value
 
     def rounder(func):

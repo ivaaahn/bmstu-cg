@@ -1,7 +1,9 @@
 from typing import List, Optional
 
+from exceptions import UnableToClose, NonConvex
 from models.point import Point
 from models.segment import Segment
+from models.vector import Vector
 
 
 class Cutter:
@@ -11,13 +13,18 @@ class Cutter:
         self._closed: bool = False
         self._sign = None
 
-    @property
-    def edges(self) -> List[Segment]:
-        return self._edges
+    def reset(self) -> None:
+        self._last_vertex = None
+        self._edges.clear()
+        self._closed = False
+        self._sign = None
+
+    def get_closing_edge(self) -> Segment:
+        return Segment(self.last_edge.p2, self.first_edge.p1)
 
     def add_edge(self, new_edge: Segment) -> None:
-        if len(self._edges) >= 2:
-            self.check(self._edges[-1], new_edge)
+        if len(self.edges) >= 2 and not self.is_convex(self.last_edge, new_edge):
+            raise NonConvex("Невыпуклый отсекатель")
 
         self.edges.append(new_edge)
 
@@ -25,13 +32,18 @@ class Cutter:
             self.set_sign()
 
     def close(self) -> Segment:
-        closing_edge = Segment(self.edges[-1].p2, self.edges[0].p1)
+        if not self.ready_to_close():
+            raise UnableToClose('Недостаточно ребер, чтобы замкнуть')
 
-        self.check(closing_edge, self._edges[0])
+        closing_edge = self.get_closing_edge()
+
+        if not self.is_convex(closing_edge, self.first_edge):
+            raise NonConvex("Невыпуклый отсекатель")
 
         self.add_edge(closing_edge)
 
         self._closed = True
+
         return closing_edge
 
     def is_closed(self) -> bool:
@@ -40,72 +52,39 @@ class Cutter:
     def ready_to_close(self) -> bool:
         return len(self._edges) >= 2
 
-    def check(self, e1: Segment, e2: Segment):
-        if self._sign * Segment.cross_product(e1, e2) < 0:
-            raise Exception("Невыпуклый отсекатель")
+    def is_convex(self, e1: Segment, e2: Segment) -> bool:
+        return self._sign * Vector.cross_prod(Vector(e1), Vector(e2)) >= 0
 
     def set_sign(self) -> None:
-        self._sign = 1 if Segment.cross_product(self._edges[0], self._edges[1]) > 0 else -1
-        print(self._sign)
+        self._sign = 1 if Vector.cross_prod(Vector(self.first_edge), Vector(self.second_edge)) > 0 else -1
 
-    # def check_polygon():
-    #     # Не существует многоугольника, у которого меньше 3 вершин
-    #     if len(verteces_list) < 3:
-    #         return False
-    #         # Знаки всех векторых произведений должны быть одинаковыми:
-    #     # запомним знак первого векторного произведения
-    #     sign = 1 if vect_mul(get_vect(verteces_list[1], verteces_list[2]),
-    #                          get_vect(verteces_list[0], verteces_list[1])) > 0 else -1
-    #     # В цикле проверяем совпадения знаков векторных произведений
-    #     # всех пар соседних ребер со знаком первого
-    #     # векторного произведения
-    #     for i in range(3, len(verteces_list)):
-    #         if sign * vect_mul(get_vect(verteces_list[i - 1], verteces_list[i]),
-    #                            get_vect(verteces_list[i - 2], verteces_list[i - 1])) < 0:
-    #             # Возвращаем False при несовпадении знаков: прямоугольник невыпуклый
-    #             return False
-    #
-    #     if sign < 0:
-    #         # если знак отрицательный, значит обход был по часовой стрелке.
-    #         # В дальнейших шагах мне нужно работать с обходом против часовой
-    #         # стрелке (при выяснении направления нормали, например), поэтому
-    #         # я переворчиваю список вершин (ну и соответственно при проходе
-    #         # в обратном порядке, будет обход против часовой стрелки)
-    #         verteces_list.reverse()
-    #
-    #     return True
+    @staticmethod
+    def get_normal(e: Segment, e_next: Segment):
+        vector = Vector(e)
+        n = Vector(x=1, y=0) if vector.x == 0 else Vector(x=(-vector.y / vector.x), y=1)
 
-    # @property
-    # def left(self) -> int:
-    #     return self._ltop.x
-    #
-    # @property
-    # def right(self) -> int:
-    #     return self._rbottom.x
-    #
-    # @property
-    # def top(self) -> int:
-    #     return self._ltop.y
-    #
-    # @property
-    # def bottom(self) -> int:
-    #     return self._rbottom.y
-    #
-    # @property
-    # def rbottom(self) -> Point:
-    #     return self._rbottom
-    #
-    # @property
-    # def ltop(self) -> Point:
-    #     return self._ltop
-    #
-    # @property
-    # def lbottom(self) -> Point:
-    #     return Point(self.left, self.bottom)
-    #
-    # @property
-    # def rtop(self) -> Point:
-    #     return Point(self.right, self.top)
+        # Если < 0, то угол между нормалью и следующим ребром тупой, => нашли наружную нормаль. Меняем знак.
+        if Vector.dot_prod(Vector(e_next), n) < 0:
+            n = -n
 
-    # def to_qrect(self) -> QRect:
-    #     return QRect(self.ltop.to_qpoint(), self.rbottom.to_qpoint())
+        return n
+
+    def get_normals(self) -> List[Vector]:
+        e = self._edges
+        return [self.get_normal(e[i], e[i + 1]) for i in range(len(e) - 1)] + [self.get_normal(e[-1], e[0])]
+
+    @property
+    def edges(self) -> List[Segment]:
+        return self._edges
+
+    @property
+    def last_edge(self) -> Segment:
+        return self._edges[-1]
+
+    @property
+    def first_edge(self) -> Segment:
+        return self._edges[0]
+
+    @property
+    def second_edge(self) -> Segment:
+        return self._edges[1]

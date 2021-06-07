@@ -33,7 +33,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.controller.add_cutter_point(self.read_cutter_point())
 
     def cut_btn_handler(self) -> None:
-        self.controller.cut()
+        self.controller.solve()
 
     def mode_changed(self) -> None:
         self.controller.mouse_mode = self.mode_list.get()
@@ -61,8 +61,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.add_cutter_point_btn.clicked.connect(self.add_cutter_point_btn_handler)
         self.cut_btn.clicked.connect(self.cut_btn_handler)
 
-        # self.canvas.mousePressEvent.connect(self.controller.click)
-
     def closeEvent(self, event):
         reply = QMB.question(self, 'Message', "Вы уверены?",
                              QMB.Yes | QMB.No, QMB.Yes)
@@ -71,6 +69,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             event.ignore()
 
-    # def keyPressEvent(self, event):
-    #     if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-    #         self._fill_controller()
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.cut_btn_handler()

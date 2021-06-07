@@ -52,9 +52,8 @@ class Segment:
 
         return Segment(p1, p2)
 
-    @staticmethod
-    def cross_product(v1: 'Segment', v2: 'Segment') -> float:
-        vec1 = v1.p2 - v1.p1
-        vec2 = v2.p2 - v2.p1
 
-        return vec1.x * vec2.y - vec1.y * vec2.x
+
+    @p2.setter
+    def p2(self, value):
+        self._p2 = value

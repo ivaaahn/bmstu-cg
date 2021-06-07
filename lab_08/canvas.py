@@ -31,7 +31,7 @@ class Canvas(QLabel):
         img.fill(Qt.white)
         return img
 
-    def _update_pixmap(self):
+    def _update_pixmap(self) -> None:
         self.pixmap = QPixmap().fromImage(self.img)
         self.setPixmap(self.pixmap)
 
@@ -43,12 +43,5 @@ class Canvas(QLabel):
         for segment in segments:
             qp.drawLine(segment.to_qline())
 
-        qp.end()
-        self._update_pixmap()
-
-    def draw_point(self, point: Point, color: Color) -> None:
-        qp = QPainter(self.img)
-        qp.setPen(QPen(color.toQColor(), 3))
-        qp.drawEllipse(point.to_qpoint(), 2, 2)
         qp.end()
         self._update_pixmap()
