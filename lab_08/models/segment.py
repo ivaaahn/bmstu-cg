@@ -1,4 +1,5 @@
-from typing import List
+import math
+from typing import List, Optional
 
 from PyQt5.QtCore import QLine
 
@@ -6,9 +7,9 @@ from models.point import Point
 
 
 class Segment:
-    def __init__(self, start: Point = None, end: Point = None):
-        self._p1 = start
-        self._p2 = end
+    def __init__(self, p1: Point = None, p2: Point = None):
+        self._p1 = p1
+        self._p2 = p2
 
     @property
     def p1(self) -> Point:
@@ -36,23 +37,27 @@ class Segment:
         return self.p1.x == self.p2.x
 
     @property
-    def tangent(self) -> float:
+    def tangent(self) -> Optional[float]:
+        if self.p2.x == self.p1.x:
+            return None
+
         return (self.p2.y - self.p1.y) / (self.p2.x - self.p1.x)
 
     @staticmethod
-    def build(p1: Point, p2: Point, straight: bool = False, along: bool = False) -> 'Segment':
+    def build(p1: Point, p2: Point, straight: bool = False) -> 'Segment':
         if straight:
             if abs(p2.x - p1.x) < abs(p2.y - p1.y):
                 p2.x = p1.x
             else:
                 p2.y = p1.y
-
-        if along:
-            pass
-
         return Segment(p1, p2)
 
+    def dist(self, p: Point) -> float:
+        a = self.p1.y - self.p2.y
+        b = self.p1.x - self.p2.x
+        c = self.p1.x * self.p2.y - self.p2.x * self.p1.y
 
+        return abs(a * p.x + b * p.y + c) / math.sqrt(a ** 2 + b ** 2)
 
     @p2.setter
     def p2(self, value):

@@ -12,6 +12,9 @@ class Vector:
 
             self._value = Point(seg.p2.x - seg.p1.x, seg.p2.y - seg.p1.y)
 
+    def normal(self) -> 'Vector':
+        return Vector(x=1, y=0) if self.x == 0 else Vector(x=(-self.y / self.x), y=1)
+                    
     @property
     def x(self) -> float:
         return self._value.x

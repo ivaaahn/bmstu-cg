@@ -480,7 +480,10 @@
    <property name="layoutDirection">
     <enum>Qt::LeftToRight</enum>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="5,1">
+   <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="5,2">
+    <property name="spacing">
+     <number>15</number>
+    </property>
     <property name="sizeConstraint">
      <enum>QLayout::SetDefaultConstraint</enum>
     </property>
@@ -489,6 +492,9 @@
     </property>
     <property name="topMargin">
      <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>10</number>
     </property>
     <item>
      <widget class="Canvas" name="canvas">
@@ -503,6 +509,9 @@
       </property>
       <property name="text">
        <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
      </widget>
     </item>
@@ -554,7 +563,7 @@
           <item>
            <widget class="ModeList" name="mode_list">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -587,7 +596,7 @@
             </item>
             <item>
              <property name="text">
-              <string>Задание отсекателя (по двум вершинам)</string>
+              <string>Установка отсекателя</string>
              </property>
             </item>
            </widget>
@@ -628,6 +637,12 @@
           </item>
           <item>
            <widget class="ColorListCutter" name="cutter_color_list">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="maximumSize">
              <size>
               <width>250</width>
@@ -727,6 +742,12 @@
           </item>
           <item>
            <widget class="ColorListSegment" name="default_segment_color_list">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="maximumSize">
              <size>
               <width>250</width>
@@ -828,6 +849,12 @@
            <widget class="ColorListResult" name="result_segment_color_list">
             <property name="enabled">
              <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
             <property name="maximumSize">
              <size>

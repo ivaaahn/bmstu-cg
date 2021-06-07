@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from exceptions import UnableToClose, NonConvex
 from models.point import Point
@@ -59,9 +59,10 @@ class Cutter:
         self._sign = 1 if Vector.cross_prod(Vector(self.first_edge), Vector(self.second_edge)) > 0 else -1
 
     @staticmethod
-    def get_normal(e: Segment, e_next: Segment):
+    def _get_normal(e: Segment, e_next: Segment):
         vector = Vector(e)
-        n = Vector(x=1, y=0) if vector.x == 0 else Vector(x=(-vector.y / vector.x), y=1)
+
+        n = vector.normal()
 
         # Если < 0, то угол между нормалью и следующим ребром тупой, => нашли наружную нормаль. Меняем знак.
         if Vector.dot_prod(Vector(e_next), n) < 0:
@@ -71,7 +72,10 @@ class Cutter:
 
     def get_normals(self) -> List[Vector]:
         e = self._edges
-        return [self.get_normal(e[i], e[i + 1]) for i in range(len(e) - 1)] + [self.get_normal(e[-1], e[0])]
+        return [self._get_normal(e[i], e[i + 1]) for i in range(len(e) - 1)] + [self._get_normal(e[-1], e[0])]
+
+    def get_tangents(self) -> List[Optional[float]]:
+        return [e.tangent for e in self.edges]
 
     @property
     def edges(self) -> List[Segment]:
@@ -88,3 +92,6 @@ class Cutter:
     @property
     def second_edge(self) -> Segment:
         return self._edges[1]
+
+    def edges_with_distance(self, p: Point) -> List[Tuple[Segment, float]]:
+        return list(zip(self.edges, [e.dist(p) for e in self.edges]))

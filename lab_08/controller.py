@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication as QGuiApp
@@ -31,26 +31,58 @@ class Controller:
     def clear_all(self) -> None:
         self._canvas.clear()
         self.cutter = Cutter()
-        self._fst_click = None
+        self.first_click_reset()
         self._segments.clear()
 
     def add_segment(self, seg: Segment) -> None:
         self._segments.append(seg)
         self._canvas.draw_segments([seg], self._segment_color, is_result=False)
 
+    def along_handler(self, segment: Segment) -> Segment:
+        tangents = self.cutter.get_tangents()
+
+        m = segment.tangent
+
+        best: Optional[float] = None
+
+        if m is None:
+            for t in tangents:
+                if t is not None and t > best:
+                    best = t
+                elif t in None:
+                    best = None
+                    break
+        else:
+            for t in tangents:
+                if t is not None and (best is None or abs(t - m) < abs(m - best)):
+                    best = t
+
+            if m > max([_ for _ in tangents if _ is not None]) and None in tangents:
+                best = None
+                segment.p2.x = segment.p1.x
+
+        if best is not None:
+            segment.p2.y = best * (segment.p2.x - segment.p1.x) + segment.p1.y
+
+        return segment
+
     def _add_segment_point(self, p: Point) -> None:
-        if self._fst_click is not None:
+        if self.first_click_was():
             straight = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
             along = QGuiApp.keyboardModifiers() & Qt.ControlModifier
 
-            segment = Segment.build(self._fst_click, p, straight=straight, along=along)
-            self.add_segment(segment)
-            self._fst_click = None
-        else:
-            self._fst_click = p
+            segment = Segment.build(self.first_click, p, straight=straight)
 
-    def _add_cutter_edge(self, p1: Point, p2: Point) -> None:
-        edge = Segment(p1, p2)
+            if along:
+                self.along_handler(segment)
+
+            self.add_segment(segment)
+            self.first_click_reset()
+        else:
+            self.first_click = p
+
+    def _add_cutter_edge(self, p1: Point, p2: Point, straight: bool = False) -> None:
+        edge = Segment.build(p1, p2, straight=straight)
         self.cutter.add_edge(edge)
         self._canvas.draw_segments([edge], self.cutter_color)
 
@@ -58,21 +90,23 @@ class Controller:
         self._cutter.reset()
         self._canvas.clear()
         self._canvas.draw_segments(self._segments, self._segment_color)
-        self._fst_click = None
+        self.first_click_reset()
 
     def add_cutter_point(self, p: Point) -> None:
         if self._cutter.is_closed():
             self.reset_cutter()
 
-        if self._fst_click is not None:
+        if self.first_click_was():
+            straight = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
+
             try:
-                self._add_cutter_edge(self._fst_click, p)
+                self._add_cutter_edge(self.first_click, p, straight)
             except NonConvex as e:
                 QMessageBox.critical(self._canvas, "Ошибка", e.message)
                 self.reset_cutter()
                 return
 
-        self._fst_click = p
+        self.first_click = p
 
     def close_cutter(self) -> None:
         try:
@@ -85,15 +119,12 @@ class Controller:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
 
-        self._fst_click = None
         self._canvas.draw_segments([closing_edge], self._cutter_color)
 
     def click_handler(self, pos: Point, buttons: Qt.MouseButtons) -> None:
         if buttons == Qt.LeftButton:
-
             if self.mouse_mode is Mode.CUTTER:
                 self.add_cutter_point(pos)
-
             else:
                 self._add_segment_point(pos)
 
@@ -101,9 +132,13 @@ class Controller:
             if self.mouse_mode is Mode.CUTTER:
                 self.close_cutter()
             else:
-                self._fst_click = None
+                self.first_click_reset()
 
     def solve(self) -> None:
+        if not self._cutter.is_closed():
+            QMessageBox.critical(self._canvas, "Ошибка", "Для отсечения необходимо задать отсекатель")
+            return
+
         for segment in self._segments:
             self.cut(segment)
 
@@ -172,6 +207,7 @@ class Controller:
     @mouse_mode.setter
     def mouse_mode(self, new_mode: Mode) -> None:
         self._mouse_mode = new_mode
+        self.first_click_reset()
 
     @cutter_color.setter
     def cutter_color(self, new_color: Color) -> None:
@@ -184,3 +220,17 @@ class Controller:
     @result_color.setter
     def result_color(self, new_color: Color) -> None:
         self._result_color = new_color
+
+    def first_click_was(self) -> bool:
+        return self._fst_click is not None
+
+    def first_click_reset(self) -> None:
+        self._fst_click = None
+
+    @property
+    def first_click(self) -> Optional[Point]:
+        return self._fst_click
+
+    @first_click.setter
+    def first_click(self, pos: Point) -> None:
+        self._fst_click = pos

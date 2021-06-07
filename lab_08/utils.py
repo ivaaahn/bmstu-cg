@@ -1,7 +1,4 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QEventLoop
-
-W, H = 1223, 941
+W, H = 1232, 941
 
 
 def custom_round(num: float) -> int:
