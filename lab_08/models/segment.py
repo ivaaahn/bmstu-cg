@@ -1,8 +1,10 @@
 import math
 from typing import List, Optional
 
+import numpy as np
 from PyQt5.QtCore import QLine
 
+import utils
 from models.point import Point
 from models.vector import Vector
 
@@ -45,6 +47,27 @@ class Segment:
         return (self.p2.y - self.p1.y) / (self.p2.x - self.p1.x)
 
     @staticmethod
+    def _get_intersect(s1: 'Segment', s2: 'Segment'):
+        l1 = np.cross(s1.p1.to_ndarray(), s1.p2.to_ndarray())
+        l2 = np.cross(s2.p1.to_ndarray(), s2.p2.to_ndarray())
+        x, y, z = np.cross(l1, l2)
+
+        return Point(utils.custom_round(x / z), utils.custom_round(y / z))
+
+    def put_on_segment(self, p: Point) -> Point:
+        x = self.p1.x
+
+        if self.tangent is None:
+            s = Segment(p, Point(self.p1.x, p.y))
+        elif self.tangent == 0:
+            s = Segment(p, Point(p.x, p.y - 10))
+        else:
+            m = -1 / self.tangent
+            s = Segment(p, Point(self.p1.x, m * (x - p.x) + p.y))
+
+        return self._get_intersect(self, s)
+
+    @staticmethod
     def build(p1: Point, p2: Point, straight: bool = False) -> 'Segment':
         if straight:
             if abs(p2.x - p1.x) < abs(p2.y - p1.y):
@@ -55,7 +78,7 @@ class Segment:
 
     def dist(self, p: Point) -> float:
         a = self.p1.y - self.p2.y
-        b = self.p1.x - self.p2.x
+        b = self.p2.x - self.p1.x
         c = self.p1.x * self.p2.y - self.p2.x * self.p1.y
 
         return abs(a * p.x + b * p.y + c) / math.sqrt(a ** 2 + b ** 2)
@@ -81,3 +104,5 @@ class Segment:
 
         return False
 
+    def to_ndarray(self) -> np.ndarray:
+        return np.array([self.p1.y - self.p2.y, self.p1.x - self.p2.x, self.p1.x * self.p2.y - self.p2.x * self.p1.y])

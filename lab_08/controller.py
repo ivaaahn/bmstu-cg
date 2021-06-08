@@ -67,6 +67,11 @@ class Controller:
         return segment
 
     def _add_segment_point(self, p: Point) -> None:
+        if self.cutter.is_closed():
+            for edge in self.cutter.edges:
+                if edge.dist(p) <= 10:
+                    p = edge.put_on_segment(p)
+
         if self.first_click_was():
             straight = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
             along = QGuiApp.keyboardModifiers() & Qt.ControlModifier
