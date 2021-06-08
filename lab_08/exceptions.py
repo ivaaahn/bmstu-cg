@@ -9,3 +9,7 @@ class UnableToClose(CutterError):
 
 class NonConvex(CutterError):
     pass
+
+
+class DegenerateCutter(CutterError):
+    pass

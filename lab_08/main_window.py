@@ -33,7 +33,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.controller.add_cutter_point(self.read_cutter_point())
 
     def cut_btn_handler(self) -> None:
-        self.controller.solve()
+        self.controller.cut()
 
     def mode_changed(self) -> None:
         self.controller.mouse_mode = self.mode_list.get()

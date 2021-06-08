@@ -1,6 +1,6 @@
 from __future__ import division
 
-from typing import Tuple, Optional
+from typing import Tuple
 
 import numpy as np
 from PyQt5.QtCore import QPoint, QPointF
@@ -10,10 +10,6 @@ class Point:
     def __init__(self, x: [float, int], y: [float, int]):
         self._x = x
         self._y = y
-
-    @property
-    def code(self) -> [float, int]:
-        return self._code
 
     @property
     def value(self) -> [Tuple[int, int], Tuple[float, float]]:

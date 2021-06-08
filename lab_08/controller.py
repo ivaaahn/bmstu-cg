@@ -1,11 +1,11 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication as QGuiApp
 from PyQt5.QtWidgets import QMessageBox
 
 from canvas import Canvas
-from exceptions import NonConvex, UnableToClose
+from exceptions import NonConvex, UnableToClose, DegenerateCutter
 from models.cutter import Cutter
 from models.point import Point
 from models.segment import Segment
@@ -73,7 +73,7 @@ class Controller:
 
             segment = Segment.build(self.first_click, p, straight=straight)
 
-            if along:
+            if self.cutter.is_closed() and along:
                 self.along_handler(segment)
 
             self.add_segment(segment)
@@ -111,7 +111,7 @@ class Controller:
     def close_cutter(self) -> None:
         try:
             closing_edge = self.cutter.close()
-        except NonConvex as e:
+        except (NonConvex, DegenerateCutter) as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             self.reset_cutter()
             return
@@ -134,39 +134,34 @@ class Controller:
             else:
                 self.first_click_reset()
 
-    def solve(self) -> None:
+    def cut(self) -> None:
         if not self._cutter.is_closed():
             QMessageBox.critical(self._canvas, "Ошибка", "Для отсечения необходимо задать отсекатель")
             return
 
         for segment in self._segments:
-            self.cut(segment)
+            self._cut_segment(segment)
 
-    def cut(self, segment: Segment) -> None:
-        t_start, t_end = 0, 1
+    def _cut_segment(self, segment: Segment) -> None:
+        t_start, t_end = 0.0, 1.0
 
-        # директриса отрезка
-        d = Vector(segment)
+        d = segment.to_vector()
 
-        for edge, n in zip(self.cutter.edges, self.cutter.get_normals()):
+        for edge, n in zip(self.cutter.edges, self.cutter.normals):
             f = edge.p1 if edge.p1 != segment.p1 else edge.p2
 
-            w = Vector(Segment(f, segment.p1))
+            w = Segment(f, segment.p1).to_vector()
 
-            d_ck = Vector.dot_prod(d, n)
-            w_ck = Vector.dot_prod(w, n)
+            d_dp = Vector.dot_prod(d, n)
+            w_dp = Vector.dot_prod(w, n)
 
-            # Отрезок выродился в точку
-            if d_ck == 0:
-                # Эта точка вне окна
-                if w_ck < 0: return
-
+            if d_dp == 0:
+                if w_dp < 0: return
                 continue
 
-            # Отрезок не вырожден, вычисляем t
-            t = -w_ck / d_ck
+            t = -w_dp / d_dp
 
-            if d_ck > 0:
+            if d_dp > 0:
                 if t > 1: return
                 t_start = max(t, t_start)
 
@@ -174,7 +169,7 @@ class Controller:
                 if t < 0: return
                 t_end = min(t, t_end)
 
-        if t_start < t_end:
+        if t_start <= t_end:
             p1 = Point(round(segment.p1.x + d.x * t_start), round(segment.p1.y + d.y * t_start))
             p2 = Point(round(segment.p1.x + d.x * t_end), round(segment.p1.y + d.y * t_end))
 

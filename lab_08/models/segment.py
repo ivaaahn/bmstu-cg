@@ -4,6 +4,7 @@ from typing import List, Optional
 from PyQt5.QtCore import QLine
 
 from models.point import Point
+from models.vector import Vector
 
 
 class Segment:
@@ -58,6 +59,16 @@ class Segment:
         c = self.p1.x * self.p2.y - self.p2.x * self.p1.y
 
         return abs(a * p.x + b * p.y + c) / math.sqrt(a ** 2 + b ** 2)
+
+    def to_vector(self, direction: bool = True) -> Vector:
+        x = (self.p2.x - self.p1.x)
+        y = (self.p2.y - self.p1.y)
+
+        if not direction:
+            x = -x
+            y = -y
+
+        return Vector(x, y)
 
     @p2.setter
     def p2(self, value):

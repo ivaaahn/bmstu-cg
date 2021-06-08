@@ -1,20 +1,13 @@
 from models.point import Point
-from models.segment import Segment
 
 
 class Vector:
-    def __init__(self, seg: Segment = None, direction: bool = True, x: float = None, y: float = None) -> None:
-        if x is not None and y is not None:
-            self._value = Point(x, y)
-        else:
-            if not direction:
-                seg.p1, seg.p2 = seg.p2, seg.p1
-
-            self._value = Point(seg.p2.x - seg.p1.x, seg.p2.y - seg.p1.y)
+    def __init__(self, x: float, y: float) -> None:
+        self._value = Point(x, y)
 
     def normal(self) -> 'Vector':
-        return Vector(x=1, y=0) if self.x == 0 else Vector(x=(-self.y / self.x), y=1)
-                    
+        return Vector(1, 0) if self.x == 0 else Vector((-self.y / self.x), 1)
+
     @property
     def x(self) -> float:
         return self._value.x
@@ -32,4 +25,4 @@ class Vector:
         return v1.x * v2.x + v1.y * v2.y
 
     def __neg__(self):
-        return Vector(x=-self.x, y=-self.y)
+        return Vector(-self.x, -self.y)
