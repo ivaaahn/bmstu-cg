@@ -73,3 +73,11 @@ class Segment:
     @p2.setter
     def p2(self, value):
         self._p2 = value
+
+    def contains_point(self, p: Point) -> bool:
+        if Vector.cross_prod(self.to_vector(), Segment(self.p1, p).to_vector()) <= 1e-6:
+            if self.p1 <= p <= self.p2 or self.p2 <= p <= self.p1:
+                return True
+
+        return False
+
