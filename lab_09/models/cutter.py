@@ -44,7 +44,6 @@ class Cutter(Polygon):
             raise DegenerateCutter("Вырожденный отсекатель")
 
         if self._sign == -1:
-            print("REVERSE")
             self.reverse()
 
         return edge
@@ -89,7 +88,7 @@ class Cutter(Polygon):
     @property
     def tangents(self) -> List[Optional[float]]:
         return [e.tangent for e in self.edges]
-    
+
     @property
     def normals(self) -> List[Vector]:
         if not self._normals:
@@ -97,3 +96,27 @@ class Cutter(Polygon):
 
         return self._normals
 
+    def get_closest_vertex(self, p: Point) -> Point:
+        vertices = iter(self.vertices)
+        best_vert = next(vertices)
+        best_dist = p.dist_to(best_vert)
+
+        for v in vertices:
+            dist = p.dist_to(v)
+            if dist < best_dist:
+                best_dist, best_vert = dist, v
+
+        return best_vert
+
+    def get_closest_project(self, p: Point) -> Point:
+        edges = iter(self.edges)
+        best_edge = next(edges)
+
+        min_proj = best_edge.proj(p)
+
+        for edge in edges:
+            proj = edge.proj(p)
+            if p.dist_to(proj) < p.dist_to(min_proj):
+                min_proj, best_edge = proj, edge
+
+        return min_proj

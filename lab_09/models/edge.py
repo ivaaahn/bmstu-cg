@@ -1,3 +1,6 @@
+import numpy as np
+
+import utils
 from models.point import Point
 from models.segment import Segment
 from models.vector import Vector
@@ -27,3 +30,4 @@ class Edge(Segment):
         t = -Vector.dot_prod(w, n) / Vector.dot_prod(d, n)
 
         return Point(round(s.p1.x + d.x * t), round(s.p1.y + d.y * t))
+

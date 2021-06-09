@@ -1,5 +1,6 @@
 from __future__ import division
 
+import math
 from typing import Tuple
 
 import numpy as np
@@ -30,6 +31,10 @@ class Point:
     @y.setter
     def y(self, value: [float, int]) -> None:
         self._y = value
+
+    def dist_to(self, other) -> float:
+        return np.hypot(self.x - other.x, self.y - other.y)
+        # return math.hypot(self.x - other.x, self.y - other.y)
 
     def rounder(func):
         def wrapper(self):

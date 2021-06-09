@@ -68,6 +68,12 @@ class Controller:
         if self._poly.is_closed():
             self.reset_poly()
 
+        if self.cutter.is_closed():
+            if v.dist_to(closest_vertex := self.cutter.get_closest_vertex(v)) <= 10:
+                v = closest_vertex
+            elif v.dist_to(closest_proj := self.cutter.get_closest_project(v)) <= 10:
+                v = closest_proj
+
         edge = self._poly.add_vertex(v, QGuiApp.keyboardModifiers() & Qt.ShiftModifier)
 
         if edge is not None:
@@ -126,10 +132,6 @@ class Controller:
         for vert in vertices:
             curr_is_visible = edge.point_is_visible(vert)
 
-            print("VERTICES: ", prev, vert)
-            print("VISIBLE: ", prev_is_visible, curr_is_visible)
-
-
             if prev_is_visible:
                 if curr_is_visible:
                     result.add_vertex(vert)
@@ -146,13 +148,10 @@ class Controller:
 
     def cut_poly(self) -> Polygon:
         res_poly = deepcopy(self._poly)
-        print(res_poly.vertices)
         normals = self.cutter.normals
         for i in range(len(self.cutter.vertices) - 1):
             curr_edge = Edge(self.cutter.vertices[i], self.cutter.vertices[i + 1])
             res_poly = self.cut_relative_to_edge(res_poly, curr_edge, normals[i])
-            print("After edge: ", curr_edge)
-            print(res_poly.vertices)
 
         res_poly.close()
 
