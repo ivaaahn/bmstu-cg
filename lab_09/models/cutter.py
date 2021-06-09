@@ -1,6 +1,7 @@
+from copy import deepcopy
 from typing import List, Optional
 
-from exceptions import UnableToClose, NonConvex, DegenerateCutter
+from exceptions import NonConvex, DegenerateCutter
 from models.point import Point
 from models.polygon import Polygon
 from models.edge import Edge
@@ -120,3 +121,44 @@ class Cutter(Polygon):
                 min_proj, best_edge = proj, edge
 
         return min_proj
+
+    def cut_poly(self, poly: Polygon) -> Optional[Polygon]:
+        res_poly = deepcopy(poly)
+        for i in range(len(self.vertices) - 1):
+            curr_edge = Edge(self.vertices[i], self.vertices[i + 1])
+            res_poly = Cutter.cut_relative_to_edge(res_poly, curr_edge, self.normals[i])
+            res_poly.close()
+
+            if len(res_poly.vertices) < 3:
+                return None
+
+        return res_poly
+
+    @staticmethod
+    def cut_relative_to_edge(src_poly: Polygon, edge: Edge, n: Vector) -> Polygon:
+        result = Polygon()
+
+        vertices = iter(src_poly.vertices)
+
+        prev = next(vertices)
+        prev_is_visible = edge.point_is_visible(prev)
+
+        if prev_is_visible:
+            result.add_vertex(prev)
+
+        for vert in vertices:
+            curr_is_visible = edge.point_is_visible(vert)
+
+            if prev_is_visible:
+                if curr_is_visible:
+                    result.add_vertex(vert)
+                else:
+                    result.add_vertex(edge.find_intersect(Segment(prev, vert), n))
+            else:
+                if curr_is_visible:
+                    result.add_vertex(edge.find_intersect(Segment(prev, vert), n))
+                    result.add_vertex(vert)
+
+            prev, prev_is_visible = vert, curr_is_visible
+
+        return result

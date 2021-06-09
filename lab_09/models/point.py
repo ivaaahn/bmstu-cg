@@ -33,8 +33,7 @@ class Point:
         self._y = value
 
     def dist_to(self, other) -> float:
-        return np.hypot(self.x - other.x, self.y - other.y)
-        # return math.hypot(self.x - other.x, self.y - other.y)
+        return math.hypot(self.x - other.x, self.y - other.y)
 
     def rounder(func):
         def wrapper(self):

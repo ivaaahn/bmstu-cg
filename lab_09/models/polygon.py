@@ -57,3 +57,4 @@ class Polygon:
     def edges(self) -> List[Edge]:
         v = self._vertices
         return [Edge(v[i], v[i + 1]) for i in range(len(v) - 1)]
+

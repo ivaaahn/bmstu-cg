@@ -56,6 +56,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.poly_color_list.currentIndexChanged.connect(self.segment_color_changed)
         self.result_color_list.currentIndexChanged.connect(self.result_color_changed)
 
+        self.add_cutter_btn.clicked.connect(self.add_cutter_btn_handler)
+        self.add_poly_btn.clicked.connect(self.add_poly_btn_handler)
+        self.close_poly_btn.clicked.connect(self.close_poly_btn_handler)
+        self.close_cutter_btn.clicked.connect(self.close_cutter_btn_handler)
+
         self.cut_btn.clicked.connect(self.cut_btn_handler)
         self.clear_btn.clicked.connect(self.clear_btn_handler)
 
