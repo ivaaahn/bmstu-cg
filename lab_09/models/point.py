@@ -35,12 +35,6 @@ class Point:
     def dist_to(self, other) -> float:
         return math.hypot(self.x - other.x, self.y - other.y)
 
-    def rounder(func):
-        def wrapper(self):
-            return round(func(self), 2)
-
-        return wrapper
-
     def to_qpoint(self):
         return QPoint(*self.value)
 
