@@ -8,87 +8,98 @@ from models.vector import Vector
 
 class Cutter:
     def __init__(self):
-        self._last_vertex: Optional[Point] = None
         self._vertices: List[Point] = []
-        self._edges: List[Segment] = []
-        self._normals: List[float] = []
         self._closed: bool = False
+
+        self._normals: List[float] = []
         self._sign = None
 
     def reset(self) -> None:
-        self._last_vertex = None
-        self._edges.clear()
+        self._vertices.clear()
         self._closed = False
-        self._sign = None
+
         self._normals.clear()
-        self.vertices.clear()
+        self._sign = None
 
     @property
     def vertices(self) -> List[Point]:
-        if not self._vertices:
-            self._vertices = [e.p1 for e in self.edges]
-
         return self._vertices
 
-    def get_closing_edge(self) -> Segment:
-        return Segment(self.last_edge.p2, self.first_edge.p1)
+    def add_vertex(self, v: Point, straight: bool = False) -> Optional[Segment]:
+        if len(self.vertices) >= 1 and straight:
+            prev = self.vertices[-1]
+            if abs(v.x - prev.x) < abs(v.y - prev.y):
+                v.x = prev.x
+            else:
+                v.y = prev.y
 
-    def add_edge(self, new_edge: Segment) -> None:
-        if len(self.edges) >= 2 and not self._is_convex(self.last_edge, new_edge):
+        self.vertices.append(v)
+
+        if len(self.vertices) >= 3 and self._sign is None:
+            self._set_sign()
+
+        if len(self.vertices) >= 4 and not self._is_convex():
             raise NonConvex("Невыпуклый отсекатель")
 
-        self.edges.append(new_edge)
+        if len(self.vertices) < 2:
+            return None
 
-        if len(self.edges) >= 2 and self._sign is None:
-            self.set_sign()
+        return Segment(self.vertices[-2], self.vertices[-1])
+
+    def _vertices_enough_to_close(self) -> bool:
+        return len(self._vertices) >= 3
+
+    @property
+    def edges(self) -> List[Segment]:
+        v = self._vertices
+        return [Segment(v[i], v[i + 1]) for i in range(len(v) - 1)]
 
     def close(self) -> Segment:
-        if not self._edges_enough():
-            raise UnableToClose('Недостаточно ребер, чтобы замкнуть отсекатель')
+        if not self._vertices_enough_to_close():
+            raise UnableToClose('Недостаточно ребер, чтобы замкнуть')
 
-        closing_edge = self.get_closing_edge()
-
-        if not self._is_convex(closing_edge, self.first_edge):
-            raise NonConvex("Невыпуклый отсекатель")
-
-        self.add_edge(closing_edge)
+        if self.vertices[-1] != self.vertices[0]:
+            self.add_vertex(self.vertices[0])
 
         if self._sign is None:
             raise DegenerateCutter("Вырожденный отсекатель")
 
         self._closed = True
-
-        return closing_edge
+        return Segment(self.vertices[-2], self.vertices[-1])
 
     def is_closed(self) -> bool:
         return self._closed
 
-    def _edges_enough(self) -> bool:
-        return len(self._edges) >= 2
-
-    def _is_convex(self, e1: Segment, e2: Segment) -> bool:
+    def _is_convex(self) -> bool:
         if self._sign is None:
             return True
-        return self._sign * Vector.cross_prod(e1.to_vector(), e2.to_vector()) >= 0
 
-    def set_sign(self) -> None:
-        cross_prod = Vector.cross_prod(self.edges[-2].to_vector(), self.edges[-1].to_vector())
+        prev = Segment(self.vertices[-3], self.vertices[-2]).to_vector()
+        last = Segment(self.vertices[-2], self.vertices[-1]).to_vector()
+
+        return self._sign * Vector.cross_prod(prev, last) >= 0
+
+    def _set_sign(self) -> None:
+        prev = Segment(self.vertices[-3], self.vertices[-2]).to_vector()
+        last = Segment(self.vertices[-2], self.vertices[-1]).to_vector()
+
+        cross_prod = Vector.cross_prod(prev, last)
         if cross_prod > 0:
             self._sign = 1
         elif cross_prod < 0:
             self._sign = -1
 
-    def _get_normal(self, seg_index: int):
-        curr_edge = self.edges[seg_index]
-        vector = curr_edge.to_vector()
+    def _get_normal(self, first_seg_vert: int):
+        vert_start = self.vertices[first_seg_vert]
+        edge = Segment(vert_start, self.vertices[first_seg_vert + 1])
+        vector = edge.to_vector()
 
         n = vector.normal()
 
-        verts = self.vertices
         dot_prod = 0
-        p = seg_index + 2
-        while not dot_prod and p < len(self.vertices) + seg_index:
-            dot_prod = Vector.dot_prod(n, Segment(curr_edge.p1, verts[p % len(verts)]).to_vector())
+        p = first_seg_vert + 2
+        while not dot_prod and p < len(self.vertices) + first_seg_vert:
+            dot_prod = Vector.dot_prod(n, Segment(vert_start, self.vertices[p % len(self.vertices)]).to_vector())
             p += 1
 
         if dot_prod < 0:
@@ -97,30 +108,78 @@ class Cutter:
         return n
 
     @property
-    def normals(self) -> List[Vector]:
-        if not self._normals:
-            self._normals = [self._get_normal(i) for i in range(len(self.edges))]
-
-        return self._normals
-
-    def get_tangents(self) -> List[Optional[float]]:
+    def tangents(self) -> List[Optional[float]]:
         return [e.tangent for e in self.edges]
 
     @property
-    def edges(self) -> List[Segment]:
-        return self._edges
+    def normals(self) -> List[Vector]:
+        if not self._normals:
+            self._normals = [self._get_normal(i) for i in range(len(self.vertices) - 1)]
 
-    @property
-    def last_edge(self) -> Segment:
-        return self._edges[-1]
+        return self._normals
 
-    @property
-    def first_edge(self) -> Segment:
-        return self._edges[0]
+    def get_closest_vertex(self, p: Point) -> Point:
+        vertices = iter(self.vertices)
+        best_vert = next(vertices)
+        best_dist = p.dist_to(best_vert)
 
-    @property
-    def second_edge(self) -> Segment:
-        return self._edges[1]
+        for v in vertices:
+            dist = p.dist_to(v)
+            if dist < best_dist:
+                best_dist, best_vert = dist, v
 
-    def edges_with_distance(self, p: Point) -> List[Tuple[Segment, float]]:
-        return list(zip(self.edges, [e.dist(p) for e in self.edges]))
+        return best_vert
+
+    def get_closest_grad(self, s: Segment) -> float:
+        closest_edge = self._get_closest_edge_and_proj(s.p1)[0]
+        return closest_edge.tangent
+
+    def _get_closest_edge_and_proj(self, p: Point) -> Tuple[Segment, Point]:
+        edges = iter(self.edges)
+        best_edge = next(edges)
+
+        min_proj = best_edge.proj(p)
+
+        for edge in edges:
+            proj = edge.proj(p)
+            if p.dist_to(proj) < p.dist_to(min_proj):
+                min_proj, best_edge = proj, edge
+
+        return best_edge, min_proj
+
+    def get_closest_project(self, p: Point) -> Point:
+        return self._get_closest_edge_and_proj(p)[1]
+
+    def cut(self, segment: Segment) -> Optional[Segment]:
+        t_start, t_end = 0.0, 1.0
+
+        d = segment.to_vector()
+
+        for edge, n in zip(self.edges, self.normals):
+            f = edge.p1 if edge.p1 != segment.p1 else edge.p2
+
+            w = Segment(f, segment.p1).to_vector()
+
+            d_dp = Vector.dot_prod(d, n)
+            w_dp = Vector.dot_prod(w, n)
+
+            if d_dp == 0:
+                if w_dp < 0: return
+                continue
+
+            t = -w_dp / d_dp
+
+            if d_dp > 0:
+                if t > 1: return
+                t_start = max(t, t_start)
+
+            else:
+                if t < 0: return
+                t_end = min(t, t_end)
+
+        if t_start <= t_end:
+            p1 = Point(round(segment.p1.x + d.x * t_start), round(segment.p1.y + d.y * t_start))
+            p2 = Point(round(segment.p1.x + d.x * t_end), round(segment.p1.y + d.y * t_end))
+            return Segment(p1, p2)
+
+        return None

@@ -30,88 +30,107 @@ class Controller:
 
     def clear_all(self) -> None:
         self._canvas.clear()
-        self.cutter = Cutter()
-        self.first_click_reset()
+        self._cutter.reset()
         self._segments.clear()
+        self.first_click_reset()
 
     def add_segment(self, seg: Segment) -> None:
         self._segments.append(seg)
-        self._canvas.draw_segments([seg], self._segment_color, is_result=False)
+        self._canvas.draw_segments([seg], self._segment_color)
 
     def along_handler(self, segment: Segment) -> Segment:
-        tangents = self.cutter.get_tangents()
+        tangents = self.cutter.tangents
 
         m = segment.tangent
+        print("tangents = ", tangents)
+        print("m = ", m)
+
+        # best = self.cutter.get_closest_grad(segment)
 
         best: Optional[float] = None
 
-        if m is None:
-            for t in tangents:
-                if t is not None and t > best:
-                    best = t
-                elif t in None:
-                    best = None
-                    break
-        else:
-            for t in tangents:
-                if t is not None and (best is None or abs(t - m) < abs(m - best)):
-                    best = t
+        # if m is None and m in tangents:
+        #     best = None
+        # elif m is None:
+        #     for t in tangents:
+        #         if best is None or t > best:
+        #             best = t
+        #
 
-            if m > max([_ for _ in tangents if _ is not None]) and None in tangents:
-                best = None
-                segment.p2.x = segment.p1.x
+        not_none_tangents = [_ for _ in tangents if _ is not None]
+
+        abs_tangents = []
+        for t in not_none_tangents:
+            if abs(t) >= 25:
+                abs_tangents.append(abs(t))
+            else:
+                abs_tangents.append(t)
+
+        if abs(m) > 30:
+            m = abs(m)
+
+        if m > max(abs_tangents) and None in tangents:
+            best = None
+            segment.p2.x = segment.p1.x
+        else:
+            for t in abs_tangents:
+                if best is None or abs(t - m) < abs(best - m):
+                    best = t
 
         if best is not None:
-            segment.p2.y = best * (segment.p2.x - segment.p1.x) + segment.p1.y
+            new_y = best * (segment.p2.x - segment.p1.x) + segment.p1.y
+
+            if best:
+                new_x = (segment.p2.y - segment.p1.y) / best + segment.p1.x
+            else:
+                new_x = segment.p1.x
+
+            if abs(new_x - segment.p2.x) < abs(new_y - segment.p2.y):
+                segment.p2.x = new_x
+            else:
+                segment.p2.y = new_y
 
         return segment
 
-    def _add_segment_point(self, p: Point) -> None:
+    def _add_segment_point(self, v: Point) -> None:
         if self.cutter.is_closed():
-            for edge in self.cutter.edges:
-                if edge.dist(p) <= 10:
-                    p = edge.put_on_segment(p)
+            if v.dist_to(closest_vertex := self.cutter.get_closest_vertex(v)) <= 10:
+                v = closest_vertex
+            elif v.dist_to(closest_proj := self.cutter.get_closest_project(v)) <= 10:
+                v = closest_proj
 
-        if self.first_click_was():
+        if not self.first_click_was():
+            self.first_click = v
+        else:
             straight = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
             along = QGuiApp.keyboardModifiers() & Qt.ControlModifier
 
-            segment = Segment.build(self.first_click, p, straight=straight)
+            segment = Segment.build(self.first_click, v, straight)
 
             if self.cutter.is_closed() and along:
                 self.along_handler(segment)
 
             self.add_segment(segment)
             self.first_click_reset()
-        else:
-            self.first_click = p
 
-    def _add_cutter_edge(self, p1: Point, p2: Point, straight: bool = False) -> None:
-        edge = Segment.build(p1, p2, straight=straight)
-        self.cutter.add_edge(edge)
-        self._canvas.draw_segments([edge], self.cutter_color)
+    def add_cutter_vertex(self, v: Point) -> None:
+        if self._cutter.is_closed():
+            self.reset_cutter()
+        try:
+            edge = self.cutter.add_vertex(v, QGuiApp.keyboardModifiers() & Qt.ShiftModifier)
+        except NonConvex as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            self.reset_cutter()
+            return
+
+        if edge is not None:
+            self._canvas.draw_segments([edge], self._cutter_color)
 
     def reset_cutter(self) -> None:
         self._cutter.reset()
         self._canvas.clear()
         self._canvas.draw_segments(self._segments, self._segment_color)
         self.first_click_reset()
-
-    def add_cutter_point(self, p: Point) -> None:
-        if self._cutter.is_closed():
-            self.reset_cutter()
-
-        if self.first_click_was():
-            straight = QGuiApp.keyboardModifiers() & Qt.ShiftModifier
-
-            try:
-                self._add_cutter_edge(self.first_click, p, straight)
-            except NonConvex as e:
-                QMessageBox.critical(self._canvas, "Ошибка", e.message)
-                self.reset_cutter()
-                return
-
-        self.first_click = p
 
     def close_cutter(self) -> None:
         try:
@@ -129,10 +148,9 @@ class Controller:
     def click_handler(self, pos: Point, buttons: Qt.MouseButtons) -> None:
         if buttons == Qt.LeftButton:
             if self.mouse_mode is Mode.CUTTER:
-                self.add_cutter_point(pos)
+                self.add_cutter_vertex(pos)
             else:
                 self._add_segment_point(pos)
-
         elif buttons == Qt.RightButton:
             if self.mouse_mode is Mode.CUTTER:
                 self.close_cutter()
@@ -145,40 +163,10 @@ class Controller:
             return
 
         for segment in self._segments:
-            self._cut_segment(segment)
+            result = self.cutter.cut(segment)
 
-    def _cut_segment(self, segment: Segment) -> None:
-        t_start, t_end = 0.0, 1.0
-
-        d = segment.to_vector()
-
-        for edge, n in zip(self.cutter.edges, self.cutter.normals):
-            f = edge.p1 if edge.p1 != segment.p1 else edge.p2
-
-            w = Segment(f, segment.p1).to_vector()
-
-            d_dp = Vector.dot_prod(d, n)
-            w_dp = Vector.dot_prod(w, n)
-
-            if d_dp == 0:
-                if w_dp < 0: return
-                continue
-
-            t = -w_dp / d_dp
-
-            if d_dp > 0:
-                if t > 1: return
-                t_start = max(t, t_start)
-
-            else:
-                if t < 0: return
-                t_end = min(t, t_end)
-
-        if t_start <= t_end:
-            p1 = Point(round(segment.p1.x + d.x * t_start), round(segment.p1.y + d.y * t_start))
-            p2 = Point(round(segment.p1.x + d.x * t_end), round(segment.p1.y + d.y * t_end))
-
-            self._canvas.draw_segments([Segment(p1, p2)], self._result_color, is_result=True)
+            if result is not None:
+                self._canvas.draw_segments([result], self.result_color, is_result=True)
 
     @property
     def mouse_mode(self) -> Mode:

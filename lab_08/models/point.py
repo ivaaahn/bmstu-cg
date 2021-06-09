@@ -1,5 +1,6 @@
 from __future__ import division
 
+import math
 from typing import Tuple
 
 import numpy as np
@@ -31,11 +32,8 @@ class Point:
     def y(self, value: [float, int]) -> None:
         self._y = value
 
-    def rounder(func):
-        def wrapper(self):
-            return round(func(self), 2)
-
-        return wrapper
+    def dist_to(self, other) -> float:
+        return math.hypot(self.x - other.x, self.y - other.y)
 
     def to_qpoint(self):
         return QPoint(*self.value)
