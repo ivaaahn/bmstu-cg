@@ -1,4 +1,4 @@
-W, H = 1232, 941
+W, H = 1236, 941
 
 
 def custom_round(num: float) -> int:
