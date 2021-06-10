@@ -38,9 +38,6 @@ class Cutter(Polygon):
     def close(self) -> Edge:
         edge = super().close()
 
-        if not self._is_convex():
-            raise NonConvex("Невыпуклый отсекатель")
-
         if self._sign is None:
             raise DegenerateCutter("Вырожденный отсекатель")
 
@@ -133,10 +130,11 @@ class Cutter(Polygon):
         for i in range(len(self.vertices) - 1):
             curr_edge = Edge(self.vertices[i], self.vertices[i + 1])
             res_poly = Cutter.cut_relative_to_edge(res_poly, curr_edge, self.normals[i])
-            res_poly.close()
 
             if len(res_poly.vertices) < 3:
                 return None
+
+            res_poly.close()
 
         return res_poly
 
