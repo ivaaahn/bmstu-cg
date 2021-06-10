@@ -24,8 +24,8 @@ class Edge(Segment):
         return Vector.cross_prod(self.to_vector(), Segment(self.p1, point).to_vector()) >= 0
 
     def find_intersect(self, s: Segment, n: Vector) -> Point:
-        w = Segment(self.p1, s.p1).to_vector()
         d = s.to_vector()
+        w = Segment(self.p1, s.p1).to_vector()
 
         t = -Vector.dot_prod(w, n) / Vector.dot_prod(d, n)
 
