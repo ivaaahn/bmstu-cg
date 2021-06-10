@@ -1,14 +1,17 @@
 from typing import List, Optional
 
-from exceptions import UnableToClose
+from PyQt5.QtWidgets import QMessageBox
+
+from exceptions import UnableToClose, SelfIntersection
 from models.point import Point
 from models.edge import Edge
 
 
 class Polygon:
-    def __init__(self):
+    def __init__(self, from_user: bool = True):
         self._vertices: List[Point] = []
         self._closed = False
+        self._from_user = from_user
 
     def reset(self) -> None:
         self._vertices.clear()
@@ -17,13 +20,29 @@ class Polygon:
     def reverse(self) -> None:
         self._vertices.reverse()
 
-    def add_vertex(self, v: Point, straight: bool = False) -> Optional[Edge]:
+    def self_intersections_exist(self, v: Point, closing: bool) -> bool:
+        edges = iter(self.edges[:-1])
+        if closing:
+            next(edges)
+
+        for edge in edges:
+            if Edge.is_intersect(edge, Edge(self.vertices[-1], v)):
+                return True
+
+        return False
+
+    def add_vertex(self, v: Point, straight: bool = False, closing: bool = False) -> Optional[Edge]:
         if len(self.vertices) >= 1 and straight:
             prev = self.vertices[-1]
             if abs(v.x - prev.x) < abs(v.y - prev.y):
                 v.x = prev.x
             else:
                 v.y = prev.y
+
+        # Проверка на самопересечения только при вводе многоугольника пользователем
+        if self._from_user:
+            if len(self.vertices) >= 3 and self.self_intersections_exist(v, closing):
+                raise SelfIntersection("Многоугольник не может содержать самопересечения")
 
         self.vertices.append(v)
 
@@ -40,11 +59,10 @@ class Polygon:
         if not self._vertices_enough_to_close():
             raise UnableToClose('Недостаточно ребер, чтобы замкнуть')
 
-        self._closed = True
-
         if self.vertices[-1] != self.vertices[0]:
-            self.add_vertex(self.vertices[0])
+            self.add_vertex(self.vertices[0], closing=True)
 
+        self._closed = True
         return Edge(self.vertices[-2], self.vertices[-1])
 
     def is_closed(self) -> bool:
@@ -57,4 +75,3 @@ class Polygon:
     def edges(self) -> List[Edge]:
         v = self._vertices
         return [Edge(v[i], v[i + 1]) for i in range(len(v) - 1)]
-

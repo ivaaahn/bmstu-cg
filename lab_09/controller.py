@@ -3,7 +3,7 @@ from PyQt5.QtGui import QGuiApplication as QGuiApp
 from PyQt5.QtWidgets import QMessageBox
 
 from canvas import Canvas
-from exceptions import NonConvex, UnableToClose, DegenerateCutter
+from exceptions import NonConvex, UnableToClose, DegenerateCutter, SelfIntersection
 from models.cutter import Cutter
 from models.point import Point
 from models.polygon import Polygon as Polygon
@@ -53,6 +53,9 @@ class Controller:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             self.reset_cutter()
             return
+        except SelfIntersection as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            return
 
         if edge is not None:
             self._canvas.draw_segments([edge], self._cutter_color)
@@ -67,7 +70,11 @@ class Controller:
             elif v.dist_to(closest_proj := self.cutter.get_closest_project(v)) <= 10:
                 v = closest_proj
 
-        edge = self._poly.add_vertex(v, QGuiApp.keyboardModifiers() & Qt.ShiftModifier)
+        try:
+            edge = self._poly.add_vertex(v, QGuiApp.keyboardModifiers() & Qt.ShiftModifier)
+        except SelfIntersection as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            return
 
         if edge is not None:
             self._canvas.draw_segments([edge], self._poly_color)
@@ -85,6 +92,9 @@ class Controller:
         except UnableToClose as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
+        except SelfIntersection as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            return
 
         self._canvas.draw_segments([edge], self._cutter_color)
 
@@ -96,6 +106,9 @@ class Controller:
         try:
             edge = self._poly.close()
         except UnableToClose as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            return
+        except SelfIntersection as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
 
@@ -113,6 +126,12 @@ class Controller:
                 self.close_cutter()
             else:
                 self.close_poly()
+
+        else:
+            if self.mouse_mode is Mode.CUTTER:
+                self.reset_cutter()
+            else:
+                self.reset_poly()
 
     def cut(self) -> None:
         if not self._cutter.is_closed():

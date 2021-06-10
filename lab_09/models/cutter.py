@@ -11,7 +11,7 @@ from models.vector import Vector
 
 class Cutter(Polygon):
     def __init__(self):
-        super().__init__()
+        super().__init__(from_user=True)
         self._normals: List[Vector] = []
         self._sign = None
 
@@ -24,13 +24,13 @@ class Cutter(Polygon):
         super().reverse()
         self._normals.reverse()
 
-    def add_vertex(self, v: Point, straight: bool = False) -> Optional[Edge]:
-        edge = super().add_vertex(v, straight)
+    def add_vertex(self, v: Point, straight: bool = False, closing: bool = False) -> Optional[Edge]:
+        edge = super().add_vertex(v, straight, closing)
 
         if len(self.vertices) >= 3 and self._sign is None:
             self._set_sign()
 
-        if len(self.vertices) >= 4 and not self._is_convex():
+        if len(self.vertices) >= 4 and not self._is_convex(closing):
             raise NonConvex("Невыпуклый отсекатель")
 
         return edge
@@ -49,14 +49,20 @@ class Cutter(Polygon):
 
         return edge
 
-    def _is_convex(self) -> bool:
+    def _is_convex(self, closing: bool = False) -> bool:
         if self._sign is None:
             return True
 
         prev = Edge(self.vertices[-3], self.vertices[-2]).to_vector()
         last = Edge(self.vertices[-2], self.vertices[-1]).to_vector()
 
-        return self._sign * Vector.cross_prod(prev, last) >= 0
+        result = self._sign * Vector.cross_prod(prev, last) >= 0
+
+        if closing:
+            first = Edge(self.vertices[0], self.vertices[1]).to_vector()
+            result = result and (self._sign * Vector.cross_prod(last, first) >= 0)
+
+        return result
 
     def _set_sign(self) -> None:
         prev = Edge(self.vertices[-3], self.vertices[-2]).to_vector()
@@ -136,7 +142,7 @@ class Cutter(Polygon):
 
     @staticmethod
     def cut_relative_to_edge(src_poly: Polygon, edge: Edge, n: Vector) -> Polygon:
-        result = Polygon()
+        result = Polygon(from_user=False)
 
         vertices = iter(src_poly.vertices)
 

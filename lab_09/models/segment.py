@@ -91,3 +91,19 @@ class Segment:
 
     def to_qline(self) -> QLine:
         return QLine(self._p1.to_qpoint(), self.p2.to_qpoint())
+
+    @staticmethod
+    def is_intersect(s1: 'Segment', s2: 'Segment') -> bool:
+        d1, d2 = s1.to_vector(), s2.to_vector()
+        w1, w2 = Segment(s2.p1, s1.p1).to_vector(), Segment(s1.p1, s2.p1).to_vector()
+        n1, n2 = s2.to_vector().normal(), s1.to_vector().normal()
+
+        d_dp1 = Vector.dot_prod(d1, n1)
+        if not d_dp1:
+            return False
+
+        d_dp2 = Vector.dot_prod(d2, n2)
+        w_dp1, w_dp2 = Vector.dot_prod(w1, n1), Vector.dot_prod(w2, n2)
+
+        t1, t2 = -w_dp1 / d_dp1, -w_dp2 / d_dp2
+        return (0 <= t1 <= 1) and (0 <= t2 <= 1)

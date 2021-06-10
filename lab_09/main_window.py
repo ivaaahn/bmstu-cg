@@ -1,8 +1,10 @@
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 
 from controller import Controller
+from properties.mode import Mode
 from qt.design import Ui_MainWindow
 from models.point import Point
 from models.segment import Segment
@@ -45,7 +47,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.controller.cutter_color = self.cutter_color_list.get()
 
     def segment_color_changed(self) -> None:
-        self.controller.segment_color = self.rect_color_list.get()
+        self.controller.segment_color = self.poly_color_list.get()
 
     def result_color_changed(self) -> None:
         self.controller.result_color = self.result_color_list.get()
