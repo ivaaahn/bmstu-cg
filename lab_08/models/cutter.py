@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from exceptions import UnableToClose, NonConvex, DegenerateCutter, SelfIntersection
+from exceptions import UnableToClose, NonConvex, DegenerateCutter, SelfIntersection, DegenerateEdge
 from models.point import Point
 from models.segment import Segment
 from models.vector import Vector
@@ -26,6 +26,9 @@ class Cutter:
         return self._vertices
 
     def add_vertex(self, v: Point, straight: bool = False, closing: bool = False) -> Optional[Segment]:
+        if self.vertices and self.vertices[-1] == v:
+            raise DegenerateEdge("Ребро выродилось в точку")
+
         if len(self.vertices) >= 1 and straight:
             prev = self.vertices[-1]
             if abs(v.x - prev.x) < abs(v.y - prev.y):
@@ -69,10 +72,12 @@ class Cutter:
 
         self._closed = True
 
-        # if self._sign == -1:
-        #     self.vertices.reverse()
+        new_segment = Segment(self.vertices[-2], self.vertices[-1])
 
-        return Segment(self.vertices[-2], self.vertices[-1])
+        if self._sign == -1:
+            self.vertices.reverse()
+
+        return new_segment
 
     def is_closed(self) -> bool:
         return self._closed
@@ -102,24 +107,6 @@ class Cutter:
         elif cross_prod < 0:
             self._sign = -1
 
-    def _get_normal(self, first_seg_vert: int):
-        vert_start = self.vertices[first_seg_vert]
-        edge = Segment(vert_start, self.vertices[first_seg_vert + 1])
-        vector = edge.to_vector()
-
-        n = vector.normal()
-
-        dot_prod = 0
-        p = first_seg_vert + 2
-        while not dot_prod and p < len(self.vertices) + first_seg_vert:
-            dot_prod = Vector.dot_prod(n, Segment(vert_start, self.vertices[p % len(self.vertices)]).to_vector())
-            p += 1
-
-        if dot_prod < 0:
-            n = -n
-
-        return n
-
     @property
     def tangents(self) -> List[Optional[float]]:
         return [e.tangent for e in self.edges]
@@ -127,8 +114,7 @@ class Cutter:
     @property
     def normals(self) -> List[Vector]:
         if not self._normals:
-            # self._normals = [e.to_vector().normal() for e in self.edges]
-            self._normals = [self._get_normal(i) for i in range(len(self.vertices) - 1)]
+            self._normals = [e.to_vector().normal() for e in self.edges]
 
         return self._normals
 
@@ -149,13 +135,7 @@ class Cutter:
         return closest_edge.tangent
 
     def self_intersections_exist(self, v: Point, closing: bool) -> bool:
-        # edges = iter(self.edges[:-1])
-
-        # if closing:
-        #     next(edges)
-
         edges = self.edges
-
         new_seg = Segment(self.vertices[-1], v)
 
         for edge in edges:
