@@ -68,6 +68,10 @@ class Cutter:
             raise DegenerateCutter("Вырожденный отсекатель")
 
         self._closed = True
+
+        # if self._sign == -1:
+        #     self.vertices.reverse()
+
         return Segment(self.vertices[-2], self.vertices[-1])
 
     def is_closed(self) -> bool:
@@ -123,6 +127,7 @@ class Cutter:
     @property
     def normals(self) -> List[Vector]:
         if not self._normals:
+            # self._normals = [e.to_vector().normal() for e in self.edges]
             self._normals = [self._get_normal(i) for i in range(len(self.vertices) - 1)]
 
         return self._normals

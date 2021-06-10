@@ -6,6 +6,7 @@ class Vector:
         self._value = Point(x, y)
 
     def normal(self) -> 'Vector':
+        # return Vector(-self.y, self.x)
         return Vector(1, 0) if self.x == 0 else Vector((-self.y / self.x), 1)
 
     @property
@@ -26,3 +27,6 @@ class Vector:
 
     def __neg__(self):
         return Vector(-self.x, -self.y)
+
+    def get_normal(self) -> 'Vector':
+        return Vector(-self.y, self.x)
