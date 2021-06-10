@@ -13,3 +13,6 @@ class NonConvex(CutterError):
 
 class DegenerateCutter(CutterError):
     pass
+
+class SelfIntersection(CutterError):
+    pass

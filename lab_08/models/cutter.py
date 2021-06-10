@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from exceptions import UnableToClose, NonConvex, DegenerateCutter
+from exceptions import UnableToClose, NonConvex, DegenerateCutter, SelfIntersection
 from models.point import Point
 from models.segment import Segment
 from models.vector import Vector
@@ -25,7 +25,7 @@ class Cutter:
     def vertices(self) -> List[Point]:
         return self._vertices
 
-    def add_vertex(self, v: Point, straight: bool = False) -> Optional[Segment]:
+    def add_vertex(self, v: Point, straight: bool = False, closing: bool = False) -> Optional[Segment]:
         if len(self.vertices) >= 1 and straight:
             prev = self.vertices[-1]
             if abs(v.x - prev.x) < abs(v.y - prev.y):
@@ -33,12 +33,15 @@ class Cutter:
             else:
                 v.y = prev.y
 
+        if len(self.vertices) >= 3 and self.self_intersections_exist(v, closing):
+            raise SelfIntersection("Многоугольник не может содержать самопересечения")
+
         self.vertices.append(v)
 
         if len(self.vertices) >= 3 and self._sign is None:
             self._set_sign()
 
-        if len(self.vertices) >= 4 and not self._is_convex():
+        if len(self.vertices) >= 4 and not self._is_convex(closing):
             raise NonConvex("Невыпуклый отсекатель")
 
         if len(self.vertices) < 2:
@@ -59,7 +62,7 @@ class Cutter:
             raise UnableToClose('Недостаточно ребер, чтобы замкнуть')
 
         if self.vertices[-1] != self.vertices[0]:
-            self.add_vertex(self.vertices[0])
+            self.add_vertex(self.vertices[0], closing=True)
 
         if self._sign is None:
             raise DegenerateCutter("Вырожденный отсекатель")
@@ -70,14 +73,20 @@ class Cutter:
     def is_closed(self) -> bool:
         return self._closed
 
-    def _is_convex(self) -> bool:
+    def _is_convex(self, closing) -> bool:
         if self._sign is None:
             return True
 
         prev = Segment(self.vertices[-3], self.vertices[-2]).to_vector()
         last = Segment(self.vertices[-2], self.vertices[-1]).to_vector()
 
-        return self._sign * Vector.cross_prod(prev, last) >= 0
+        result = self._sign * Vector.cross_prod(prev, last) >= 0
+
+        if closing:
+            first = Segment(self.vertices[0], self.vertices[1]).to_vector()
+            result = result and (self._sign * Vector.cross_prod(last, first) >= 0)
+
+        return result
 
     def _set_sign(self) -> None:
         prev = Segment(self.vertices[-3], self.vertices[-2]).to_vector()
@@ -133,6 +142,17 @@ class Cutter:
     def get_closest_grad(self, s: Segment) -> float:
         closest_edge = self._get_closest_edge_and_proj(s.p1)[0]
         return closest_edge.tangent
+
+    def self_intersections_exist(self, v: Point, closing: bool) -> bool:
+        edges = iter(self.edges[:-1])
+        if closing:
+            next(edges)
+
+        for edge in edges:
+            if Segment.is_intersect(edge, Segment(self.vertices[-1], v)):
+                return True
+
+        return False
 
     def _get_closest_edge_and_proj(self, p: Point) -> Tuple[Segment, Point]:
         edges = iter(self.edges)

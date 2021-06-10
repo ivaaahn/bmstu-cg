@@ -5,7 +5,7 @@ from PyQt5.QtGui import QGuiApplication as QGuiApp
 from PyQt5.QtWidgets import QMessageBox
 
 from canvas import Canvas
-from exceptions import NonConvex, UnableToClose, DegenerateCutter
+from exceptions import NonConvex, UnableToClose, DegenerateCutter, SelfIntersection
 from models.cutter import Cutter
 from models.point import Point
 from models.segment import Segment
@@ -42,53 +42,27 @@ class Controller:
         tangents = self.cutter.tangents
 
         m = segment.tangent
-        print("tangents = ", tangents)
-        print("m = ", m)
 
-        # best = self.cutter.get_closest_grad(segment)
-
-        best: Optional[float] = None
-
-        # if m is None and m in tangents:
-        #     best = None
-        # elif m is None:
-        #     for t in tangents:
-        #         if best is None or t > best:
-        #             best = t
-        #
-
-        not_none_tangents = [_ for _ in tangents if _ is not None]
-
-        abs_tangents = []
-        for t in not_none_tangents:
-            if abs(t) >= 25:
-                abs_tangents.append(abs(t))
-            else:
-                abs_tangents.append(t)
-
-        if abs(m) > 30:
-            m = abs(m)
-
-        if m > max(abs_tangents) and None in tangents:
-            best = None
-            segment.p2.x = segment.p1.x
+        if m is None and m in tangents:
+            return segment
+        elif m is None:
+            best = max(tangents)
         else:
-            for t in abs_tangents:
-                if best is None or abs(t - m) < abs(best - m):
-                    best = t
+            diff = [(abs(t - m), t) for t in tangents if t is not None]
+            choice = min(diff)
+            best = choice[1]
 
-        if best is not None:
-            new_y = best * (segment.p2.x - segment.p1.x) + segment.p1.y
+        new_y = best * (segment.p2.x - segment.p1.x) + segment.p1.y
 
-            if best:
-                new_x = (segment.p2.y - segment.p1.y) / best + segment.p1.x
-            else:
-                new_x = segment.p1.x
+        if best:
+            new_x = (segment.p2.y - segment.p1.y) / best + segment.p1.x
+        else:
+            new_x = segment.p1.x
 
-            if abs(new_x - segment.p2.x) < abs(new_y - segment.p2.y):
-                segment.p2.x = new_x
-            else:
-                segment.p2.y = new_y
+        if abs(new_x - segment.p2.x) < abs(new_y - segment.p2.y):
+            segment.p2.x = new_x
+        else:
+            segment.p2.y = new_y
 
         return segment
 
@@ -122,6 +96,9 @@ class Controller:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             self.reset_cutter()
             return
+        except SelfIntersection as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            return
 
         if edge is not None:
             self._canvas.draw_segments([edge], self._cutter_color)
@@ -142,6 +119,9 @@ class Controller:
         except UnableToClose as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
+        except SelfIntersection as e:
+            QMessageBox.critical(self._canvas, "Ошибка", e.message)
+            return
 
         self._canvas.draw_segments([closing_edge], self._cutter_color)
 
@@ -156,6 +136,8 @@ class Controller:
                 self.close_cutter()
             else:
                 self.first_click_reset()
+        elif self.mouse_mode is Mode.CUTTER:
+            self.reset_cutter()
 
     def cut(self) -> None:
         if not self._cutter.is_closed():
