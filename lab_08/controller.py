@@ -90,6 +90,11 @@ class Controller:
     def add_cutter_vertex(self, v: Point) -> None:
         if self._cutter.is_closed():
             self.reset_cutter()
+
+        if self.cutter.vertices and self.cutter.vertices[-1] == v:
+            QMessageBox.critical(self._canvas, "Ошибка", "Необходимо ввести отрезок")
+            return
+
         try:
             edge = self.cutter.add_vertex(v, QGuiApp.keyboardModifiers() & Qt.ShiftModifier)
         except NonConvex as e:
