@@ -1,13 +1,10 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 
 from controller import Controller
-from properties.mode import Mode
-from qt.design import Ui_MainWindow
 from models.point import Point
-from models.segment import Segment
+from qt.design import Ui_MainWindow
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):

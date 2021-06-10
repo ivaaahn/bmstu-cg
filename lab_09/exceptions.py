@@ -21,3 +21,7 @@ class NonConvex(CutterError):
 
 class DegenerateCutter(CutterError):
     pass
+
+
+class DegenerateEdge(CutterError):
+    pass

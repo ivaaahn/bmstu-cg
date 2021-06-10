@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import List, Optional
 
-from exceptions import NonConvex, DegenerateCutter
+from exceptions import NonConvex, DegenerateCutter, DegenerateEdge
 from models.point import Point
 from models.polygon import Polygon
 from models.edge import Edge
@@ -25,6 +25,11 @@ class Cutter(Polygon):
         self._normals.reverse()
 
     def add_vertex(self, v: Point, straight: bool = False, closing: bool = False) -> Optional[Edge]:
+        vertices = self.vertices
+
+        if vertices and vertices[-1] == v:
+            raise DegenerateEdge("Ребро выродилось в точку")
+
         edge = super().add_vertex(v, straight, closing)
 
         if len(self.vertices) >= 3 and self._sign is None:
@@ -71,24 +76,6 @@ class Cutter(Polygon):
         elif cross_prod < 0:
             self._sign = -1
 
-    def _get_normal(self, first_seg_vert: int):
-        vert_start = self.vertices[first_seg_vert]
-        edge = Edge(vert_start, self.vertices[first_seg_vert + 1])
-        vector = edge.to_vector()
-
-        n = vector.normal()
-
-        dot_prod = 0
-        p = first_seg_vert + 2
-        while not dot_prod and p < len(self.vertices) + first_seg_vert:
-            dot_prod = Vector.dot_prod(n, Edge(vert_start, self.vertices[p % len(self.vertices)]).to_vector())
-            p += 1
-
-        if dot_prod < 0:
-            n = -n
-
-        return n
-
     @property
     def tangents(self) -> List[Optional[float]]:
         return [e.tangent for e in self.edges]
@@ -96,7 +83,7 @@ class Cutter(Polygon):
     @property
     def normals(self) -> List[Vector]:
         if not self._normals:
-            self._normals = [self._get_normal(i) for i in range(len(self.vertices) - 1)]
+            self._normals = [e.to_vector().normal() for e in self.edges]
 
         return self._normals
 

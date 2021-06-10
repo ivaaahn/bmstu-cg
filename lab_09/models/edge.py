@@ -1,6 +1,3 @@
-import numpy as np
-
-import utils
 from models.point import Point
 from models.segment import Segment
 from models.vector import Vector

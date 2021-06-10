@@ -3,7 +3,7 @@ from PyQt5.QtGui import QGuiApplication as QGuiApp
 from PyQt5.QtWidgets import QMessageBox
 
 from canvas import Canvas
-from exceptions import NonConvex, UnableToClose, DegenerateCutter, SelfIntersection
+from exceptions import NonConvex, UnableToClose, DegenerateCutter, SelfIntersection, PolygonError
 from models.cutter import Cutter
 from models.point import Point
 from models.polygon import Polygon as Polygon
@@ -48,17 +48,13 @@ class Controller:
         if self._cutter.is_closed():
             self.reset_cutter()
 
-        if self.cutter.vertices and self.cutter.vertices[-1] == v:
-            QMessageBox.critical(self._canvas, "Ошибка", "Необходимо ввести отрезок")
-            return
-
         try:
             edge = self.cutter.add_vertex(v, QGuiApp.keyboardModifiers() & Qt.ShiftModifier)
         except NonConvex as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             self.reset_cutter()
             return
-        except SelfIntersection as e:
+        except PolygonError as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
 
@@ -94,10 +90,7 @@ class Controller:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             self.reset_cutter()
             return
-        except UnableToClose as e:
-            QMessageBox.critical(self._canvas, "Ошибка", e.message)
-            return
-        except SelfIntersection as e:
+        except PolygonError as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
 
@@ -113,7 +106,7 @@ class Controller:
         except UnableToClose as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
-        except SelfIntersection as e:
+        except PolygonError as e:
             QMessageBox.critical(self._canvas, "Ошибка", e.message)
             return
 

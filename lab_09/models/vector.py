@@ -6,7 +6,7 @@ class Vector:
         self._value = Point(x, y)
 
     def normal(self) -> 'Vector':
-        return Vector(1, 0) if self.x == 0 else Vector((-self.y / self.x), 1)
+        return Vector(-self.y, self.x)
 
     @property
     def x(self) -> float:

@@ -1,10 +1,8 @@
 from typing import List, Optional
 
-from PyQt5.QtWidgets import QMessageBox
-
 from exceptions import UnableToClose, SelfIntersection
-from models.point import Point
 from models.edge import Edge
+from models.point import Point
 
 
 class Polygon:
@@ -21,10 +19,6 @@ class Polygon:
         self._vertices.reverse()
 
     def self_intersections_exist(self, v: Point, closing: bool) -> bool:
-        # edges = iter(self.edges[:-1])
-        # if closing:
-        #     next(edges)
-
         edges = self.edges
         new_edge = Edge(self.vertices[-1], v)
 
