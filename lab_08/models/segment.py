@@ -109,7 +109,10 @@ class Segment:
         d_dp1 = Vector.dot_prod(d1, n1)
         d_dp2 = Vector.dot_prod(d2, n2)
 
+        if d_dp1 * d_dp2 == 0:
+            return False
+
         w_dp1, w_dp2 = Vector.dot_prod(w1, n1), Vector.dot_prod(w2, n2)
 
         t1, t2 = -w_dp1 / d_dp1, -w_dp2 / d_dp2
-        return (0 <= t1 <= 1) and (0 <= t2 <= 1)
+        return (0 < t1 < 1) and (0 < t2 < 1)

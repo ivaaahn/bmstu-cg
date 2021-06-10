@@ -144,12 +144,17 @@ class Cutter:
         return closest_edge.tangent
 
     def self_intersections_exist(self, v: Point, closing: bool) -> bool:
-        edges = iter(self.edges[:-1])
-        if closing:
-            next(edges)
+        # edges = iter(self.edges[:-1])
+
+        # if closing:
+        #     next(edges)
+
+        edges = self.edges
+
+        new_seg = Segment(self.vertices[-1], v)
 
         for edge in edges:
-            if Segment.is_intersect(edge, Segment(self.vertices[-1], v)):
+            if Segment.is_intersect(edge, new_seg):
                 return True
 
         return False
