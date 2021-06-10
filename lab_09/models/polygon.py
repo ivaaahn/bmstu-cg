@@ -21,12 +21,15 @@ class Polygon:
         self._vertices.reverse()
 
     def self_intersections_exist(self, v: Point, closing: bool) -> bool:
-        edges = iter(self.edges[:-1])
-        if closing:
-            next(edges)
+        # edges = iter(self.edges[:-1])
+        # if closing:
+        #     next(edges)
+
+        edges = self.edges
+        new_edge = Edge(self.vertices[-1], v)
 
         for edge in edges:
-            if Edge.is_intersect(edge, Edge(self.vertices[-1], v)):
+            if Edge.is_intersect(edge, new_edge):
                 return True
 
         return False
