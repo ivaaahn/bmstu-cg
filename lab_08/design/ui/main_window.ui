@@ -1036,7 +1036,7 @@
                  <bool>false</bool>
                 </property>
                 <property name="maximum">
-                 <number>941</number>
+                 <number>1232</number>
                 </property>
                 <property name="value">
                  <number>200</number>
@@ -1128,7 +1128,7 @@
                  <bool>false</bool>
                 </property>
                 <property name="maximum">
-                 <number>1218</number>
+                 <number>941</number>
                 </property>
                 <property name="value">
                  <number>300</number>
@@ -1218,10 +1218,10 @@
                  <bool>false</bool>
                 </property>
                 <property name="maximum">
-                 <number>941</number>
+                 <number>1232</number>
                 </property>
                 <property name="value">
-                 <number>600</number>
+                 <number>400</number>
                 </property>
                </widget>
               </item>
@@ -1304,10 +1304,10 @@
                  <bool>false</bool>
                 </property>
                 <property name="maximum">
-                 <number>1218</number>
+                 <number>941</number>
                 </property>
                 <property name="value">
-                 <number>800</number>
+                 <number>500</number>
                 </property>
                </widget>
               </item>
@@ -1876,10 +1876,10 @@
                  <bool>false</bool>
                 </property>
                 <property name="maximum">
-                 <number>941</number>
+                 <number>1232</number>
                 </property>
                 <property name="value">
-                 <number>141</number>
+                 <number>600</number>
                 </property>
                </widget>
               </item>
@@ -1962,7 +1962,7 @@
                  <number>941</number>
                 </property>
                 <property name="value">
-                 <number>800</number>
+                 <number>700</number>
                 </property>
                </widget>
               </item>
