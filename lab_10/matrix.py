@@ -1,28 +1,35 @@
 from math import cos, sin
 
 import numpy as np
-import utils
 from models.point import Point
-from utils import to_rad, Axis
+from utils import to_rad, Axis, W, H
 
 
 class Matrix:
     def __init__(self, n: int = 4, m: int = 4) -> None:
         self._value = np.eye(n, m)
+        self._scale_param = 35.0
+
+    @property
+    def scale_param(self) -> float:
+        return self._scale_param
+
+    @scale_param.setter
+    def scale_param(self, value: float) -> None:
+        self._scale_param = value
 
     def rotate(self, theta: [int, float], axis: Axis):
         self._value = self._value @ self._get_rotation_matrix(to_rad(theta), axis)
 
-    def transform_point(self, p: Point, scale: float):
+    def tr_point(self, p: Point):
         res_point = p.to_ndarray() @ self._value
 
         for i in range(3):
-            res_point[i] *= scale
+            res_point[i] *= self._scale_param
 
         res_point = Point(res_point[0], res_point[1], res_point[2])
-        res_point.translate(dx=(utils.W / 2), dy=(utils.H / 2))
 
-        return res_point
+        return res_point.translate(dx=(W / 2), dy=(H / 2))
 
     @staticmethod
     def _get_rotation_matrix(theta: float, axis: Axis) -> np.ndarray:

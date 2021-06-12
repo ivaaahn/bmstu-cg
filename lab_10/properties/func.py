@@ -3,28 +3,8 @@ from enum import Enum
 
 from PyQt5.QtWidgets import QComboBox
 
-# from math import sqrt, sin, cos, exp
 from numpy import sin, cos, exp, sqrt
 
-
-# def f1(x, z):
-#     return sin(x) * sin(x) + cos(z) * cos(z)
-#
-# def f2(x, z):
-#     return x**2 / 20 - z**2 / 20
-#
-# def f3(x, z):
-#     return exp(sin(sqrt(x**2 + z**2)))
-#
-# # эллиптический параболоид
-# def f4(x, z):
-#     return x**2 / 20 + z**2 / 20
-#
-# def f5(x, z):
-#     return x*z/25
-#
-# def f6(x, z):
-#     return sqrt(x**2 + z**2 + 25)
 
 class Func(Enum):
     F1 = 0
@@ -41,7 +21,7 @@ class Func(Enum):
             Func.F2: 'x^2 / 20 - z^2 / 20',
             Func.F3: 'x^2 / 20 + z^2 / 20',
             Func.F4: 'exp(sin(sqrt(x^2 + z^2)))',
-            Func.F5: 'x * z / 25',
+            Func.F5: 'x * z / 10',
             Func.F6: 'sqrt(x^2 + z^2 + 25)',
             Func.F7: 'sin(x) * cos(z)',
         }
@@ -53,7 +33,7 @@ class Func(Enum):
             Func.F2: lambda x, z: x ** 2 / 20 - z ** 2 / 20,
             Func.F3: lambda x, z: x ** 2 / 20 + z ** 2 / 20,
             Func.F4: lambda x, z: exp(sin(sqrt(x ** 2 + z ** 2))),
-            Func.F5: lambda x, z: x * z / 25,
+            Func.F5: lambda x, z: x * z,
             Func.F6: lambda x, z: sqrt(x ** 2 + z ** 2 + 25),
             Func.F7: lambda x, z: sin(x) * cos(z),
         }

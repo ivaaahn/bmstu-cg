@@ -6,6 +6,7 @@ import numpy as np
 from PyQt5.QtCore import QPoint, QPointF
 
 import utils
+from utils import custom_round
 from models.coords_3d import Coords3D
 
 
@@ -13,12 +14,18 @@ class Point(Coords3D):
     def __init__(self, x: [float, int], y: [float, int], z: [float, int] = 0):
         super().__init__(x, y, z)
 
-    def translate(self, dx: [float, int] = 0, dy: [float, int] = 0, dz: [float, int] = 0) -> None:
+    def translate(self, dx: [float, int] = 0, dy: [float, int] = 0, dz: [float, int] = 0) -> 'Point':
         self.x += dx
         self.y += dy
         self.z += dz
 
-    def is_visible(self) -> bool:
+        return self
+
+    def x_rnd(self) -> 'Point':
+        self.x = custom_round(self.x)
+        return self
+
+    def into_window(self) -> bool:
         return (0 <= self.x < utils.W) and (0 <= self.y < utils.H)
 
     def dist_to(self, other) -> float:

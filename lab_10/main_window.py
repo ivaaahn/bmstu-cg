@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMessageBox as QMB
 
 from controller import Controller
-from models.point import Point
 from qt.design import Ui_MainWindow
 from utils import Ranges, Axis
 
@@ -13,7 +12,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.controller = Controller(self.canvas, self.func_list.get(), self.color_list.get())  # TODO
         self.bind_buttons()
-        # self.canvas.canvas_clicked.connect(self.controller.click_handler)
 
     def _read_scale(self) -> int:
         return self.scale_coeff_box.value()
@@ -39,9 +37,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return r
 
-    def apply_btn_handler(self) -> None:
+    def change_ranges_btn_handler(self) -> None:
         self.controller.ranges = self._read_ranges()
-        self.controller.solve()
 
     def rotate_btn_handler(self, box: Axis) -> None:
         if box is Axis.X:
@@ -62,6 +59,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def color_changed(self) -> None:
         self.controller.color = self.color_list.get()
 
+    def render_btn_handler(self) -> None:
+        self.controller.render()
+
     def clear_btn_handler(self) -> None:
         self.controller.clear_all()
         
@@ -69,7 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.func_list.currentIndexChanged.connect(self.func_changed)
         self.color_list.currentIndexChanged.connect(self.color_changed)
 
-        self.apply_btn.clicked.connect(self.apply_btn_handler)
+        self.change_ranges_btn.clicked.connect(self.change_ranges_btn_handler)
 
         self.rotate_x_btn.clicked.connect(lambda _: self.rotate_btn_handler(Axis.X))
         self.rotate_y_btn.clicked.connect(lambda _: self.rotate_btn_handler(Axis.Y))
@@ -77,6 +77,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.scale_btn.clicked.connect(self.scale_btn_handler)
 
+        self.render_btn.clicked.connect(self.render_btn_handler)
         self.clear_btn.clicked.connect(self.clear_btn_handler)
 
     def closeEvent(self, event):

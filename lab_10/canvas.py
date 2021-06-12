@@ -1,13 +1,9 @@
-from typing import List
-
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage
 from PyQt5.QtWidgets import QLabel
 
 import utils
 from models.point import Point
-from models.segment import Segment
 from properties.color import Color
 
 
@@ -15,6 +11,15 @@ class Canvas(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
         self.clear()
+        self._color = None
+
+    @property
+    def color(self) -> Color:
+        return self._color
+
+    @color.setter
+    def color(self, value: Color) -> None:
+        self._color = value
 
     def clear(self) -> None:
         self.img = self._new_image()
@@ -30,19 +35,24 @@ class Canvas(QLabel):
         self.pixmap = QPixmap().fromImage(self.img)
         self.setPixmap(self.pixmap)
 
-    def draw_segments(self, segments: List[Segment], color: Color) -> None:
+    def draw_line(self, p1: Point, p2: Point, with_update: bool = False) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(color.toQColor()))
+        qp.setPen(QPen(self.color.toQColor()))
 
-        for segment in segments:
-            qp.drawLine(segment.to_qline())
+        qp.drawLine(p1.to_qpointf(), p2.to_qpointf())
 
         qp.end()
 
-    def draw_point(self, p: Point, color: Color) -> None:
+        if with_update:
+            self.update()
+
+    def draw_point(self, p: Point, with_update: bool = False) -> None:
         qp = QPainter(self.img)
-        qp.setPen(QPen(color.toQColor()))
+        qp.setPen(QPen(self.color.toQColor()))
 
         qp.drawPoint(p.to_qpoint())
 
         qp.end()
+
+        if with_update:
+            self.update()
