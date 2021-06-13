@@ -1,12 +1,11 @@
 from copy import copy
-from timeit import timeit
 from typing import List, Optional
 
 from numpy import arange
 
 from canvas import Canvas
-from horizon import Horizon, Visible
-from matrix import Matrix
+from models.horizon import Horizon, Visible
+from models.matrix import Matrix
 from models.point import Point
 from properties.color import Color
 from properties.func import Func
@@ -61,10 +60,10 @@ class Controller:
         if p2.x == p1.x:
             return Point(p1.x, hor[p1.x], p1.z)
 
-        if p1.y == hor[p1.x]:
+        if abs(p1.y - hor[p1.x]) < 1e-5:
             return copy(p1)
 
-        if p2.y == hor[p2.x]:
+        if abs(p2.y - hor[p2.x]) < 1e-5:
             return copy(p2)
 
         if p1.x > p2.x:
@@ -86,12 +85,12 @@ class Controller:
             tmp_x -= 1
 
         # ============DEBUG==============
-        if tmp_x > p2.x:
-            res = Point(tmp_x, tmp_y, p1.z).x_rnd()
-            print("p1: ", p1)
-            print("p2: ", p2)
-            print("hor: ", [(x, y) for x, y in zip(range(p1.x, p2.x + 1), hor[p1.x:(p2.x + 1)])])
-            print("res: ", res)
+        # if tmp_x > p2.x:
+        #     res = Point(tmp_x, tmp_y, p1.z).x_rnd()
+        #     print("p1: ", p1)
+        #     print("p2: ", p2)
+        #     print("hor: ", [(x, y) for x, y in zip(range(p1.x, p2.x + 1), hor[p1.x:(p2.x + 1)])])
+        #     print("res: ", res)
         # ============DEBUG==============
 
         return Point(tmp_x, tmp_y, p1.z)
@@ -121,11 +120,16 @@ class Controller:
 
             curr_visible = self._horiz.visibility_type(p_curr)
 
+            # ================DEBUG====================
+            # self._canvas.draw_point(p_curr, color=Color.RED, with_update=True)
+            # ================DEBUG====================
+
             if curr_visible == prev_visible:
                 if curr_visible != Visible.NOT:
                     draw(p_prev, p_curr)
                     fill_horiz(p_prev, p_curr)
             else:
+
                 if curr_visible is Visible.NOT:
                     if prev_visible is Visible.TOP:
                         res = self.find_intersect(p_prev, p_curr, self._horiz.top)
@@ -165,20 +169,38 @@ class Controller:
             p_prev = copy(p_curr)
             prev_visible = curr_visible
 
+            # ================DEBUG====================
+            # utils.delay()
+            # self._canvas.update()
+            # ================DEBUG====================
+
         self.handle_right_edge(p_prev)
 
     def render(self) -> None:
         self._rendered = True
-        print(timeit(lambda: self.solve(), number=1))
-        # self.solve()
+        self.solve()
+
+        # ================DEBUG====================
+        # print(timeit(lambda: self.solve(), number=1))
+        # ================DEBUG====================
 
     def solve(self):
         self._canvas.clear()
         self._horiz.reset_all()
         self.edge_points_reset()
 
+        # ================DEBUG====================
+        # y-rot = 35; z-rot = 60; scale=50; func=exp(...)
+        # x = 651
+        # self._canvas.draw_line(Point(x, 0), Point(x, utils.H), color=Color.RED, with_update=True)
+        # ================DEBUG====================
+
         for z in self.range_z:
             self.draw_curve(z)
+            # ================DEBUG====================
+            # utils.delay()
+            # self._canvas.update()
+            # ================DEBUG====================
 
         self._canvas.update()
 
@@ -186,8 +208,7 @@ class Controller:
         self._tr_matrix.rotate(value, axis)
 
         if self._rendered:
-            self.render()
-            # self.solve()
+            self.solve()
 
     @property
     def ranges(self) -> Ranges:
@@ -201,9 +222,7 @@ class Controller:
         self._z_range = None
 
         if self._rendered:
-            self.render()
-
-            # self.solve()
+            self.solve()
 
     @property
     def function(self) -> Func:
@@ -214,9 +233,7 @@ class Controller:
         self._func = func
 
         if self._rendered:
-            self.render()
-
-            # self.solve()
+            self.solve()
 
     @property
     def scale_param(self) -> float:
@@ -227,9 +244,7 @@ class Controller:
         self._tr_matrix.scale_param = value
 
         if self._rendered:
-            self.render()
-
-            # self.solve()
+            self.solve()
 
     @property
     def color(self) -> Color:
@@ -240,8 +255,7 @@ class Controller:
         self._canvas.color = value
 
         if self._rendered:
-            self.render()
-            # self.solve()
+            self.solve()
 
     @property
     def range_z(self) -> arange:

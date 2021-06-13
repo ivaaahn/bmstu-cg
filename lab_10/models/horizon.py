@@ -1,8 +1,6 @@
 from enum import Enum
 from typing import List
 
-from numpy import arange
-
 import utils
 from models.point import Point
 
@@ -39,6 +37,11 @@ class Horizon:
         self._bottom = [float(utils.H) for _ in range(utils.W)]
 
     def visibility_type(self, p: Point) -> Visible:
+        # ================DEBUG====================
+        # if p.x == 651:
+        #     pass
+        # ================DEBUG====================
+
         if p.y >= self.top[p.x]:
             return Visible.TOP
 
@@ -48,15 +51,22 @@ class Horizon:
         return Visible.NOT
 
     def fill(self, p1: Point, p2: Point) -> None:
+        if p1.x == p2.x:
+            self.top[p2.x] = max(self.top[p2.x], p2.y)
+            self.bottom[p2.x] = min(self.bottom[p2.x], p2.y)
+            return
+
         if p1.x > p2.x:
             p1, p2 = p2, p1
 
-        if p2.x == p1.x:
-            self.top[p2.x] = max(self.top[p2.x], p2.y)
-            self.bottom[p2.x] = min(self.bottom[p2.x], p2.y)
-        else:
-            m = (p2.y - p1.y) / (p2.x - p1.x)
-            for x in arange(p1.x, p2.x + 1):
-                y = m * (x - p1.x) + p1.y
-                self.top[x] = max(self.top[x], y)
-                self.bottom[x] = min(self.bottom[x], y)
+        m = (p2.y - p1.y) / (p2.x - p1.x)
+        for x in range(p1.x, p2.x + 1):
+            y = m * (x - p1.x) + p1.y
+
+            # ================DEBUG====================
+            # if x == 651:
+            #     pass
+            # ================DEBUG====================
+
+            self.top[x] = max(self.top[x], y)
+            self.bottom[x] = min(self.bottom[x], y)

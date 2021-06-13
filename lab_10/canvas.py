@@ -35,10 +35,12 @@ class Canvas(QLabel):
         self.pixmap = QPixmap().fromImage(self.img)
         self.setPixmap(self.pixmap)
 
-    def draw_line(self, p1: Point, p2: Point, with_update: bool = False) -> None:
-        qp = QPainter(self.img)
-        qp.setPen(QPen(self.color.toQColor()))
+    def draw_line(self, p1: Point, p2: Point, color: Color = None, with_update: bool = False) -> None:
+        if not color:
+            color = self.color
 
+        qp = QPainter(self.img)
+        qp.setPen(QPen(color.toQColor()))
         qp.drawLine(p1.to_qpointf(), p2.to_qpointf())
 
         qp.end()
@@ -46,10 +48,12 @@ class Canvas(QLabel):
         if with_update:
             self.update()
 
-    def draw_point(self, p: Point, with_update: bool = False) -> None:
-        qp = QPainter(self.img)
-        qp.setPen(QPen(self.color.toQColor()))
+    def draw_point(self, p: Point, color: Color = None, with_update: bool = False) -> None:
+        if not color:
+            color = self.color
 
+        qp = QPainter(self.img)
+        qp.setPen(QPen(color.toQColor()))
         qp.drawPoint(p.to_qpoint())
 
         qp.end()

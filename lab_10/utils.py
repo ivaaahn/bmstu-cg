@@ -2,11 +2,18 @@ from dataclasses import dataclass
 from enum import Enum
 from math import pi
 
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QEventLoop
+
 W, H = 1354, 941
 
 
 def to_rad(angle: [float, int]) -> float:
     return angle * pi / 180
+
+
+def delay():
+    QtWidgets.QApplication.processEvents(QEventLoop.AllEvents)
 
 
 def custom_round(num: float) -> int:
