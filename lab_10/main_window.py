@@ -10,7 +10,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
-        self.controller = Controller(self.canvas, self.func_list.get(), self.color_list.get())  # TODO
+        self.controller = Controller(self.canvas, self.func_list.get(), self.color_list.get())
         self.bind_buttons()
 
     def _read_scale(self) -> int:

@@ -590,16 +590,6 @@
             </item>
             <item>
              <property name="text">
-              <string>x * z</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>sqrt(x^2 + z^2 + 25)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
               <string>sin(x) * cos(z)</string>
              </property>
             </item>

@@ -15,6 +15,7 @@ from utils import Ranges, Axis
 class Controller:
     def __init__(self, canvas: Canvas, func: Func, color: Color) -> None:
         self._canvas = canvas
+
         self._canvas.color = color
         self._func = func
 
@@ -25,10 +26,10 @@ class Controller:
         self.p_left: Optional[Point] = None
         self.p_right: Optional[Point] = None
 
-        self._rendered: bool = False
+        self._x_range: Optional[arange] = None
+        self._z_range: Optional[arange] = None
 
-        self._x_range = None
-        self._z_range = None
+        self._rendered: bool = False
 
     def edge_points_reset(self) -> None:
         self.p_left = None
@@ -96,12 +97,12 @@ class Controller:
         return Point(tmp_x, tmp_y, p1.z)
 
     def draw_curve(self, z: float):
-        transform = lambda x, y: self._tr_matrix.tr_point(Point(x, y, z)).x_rnd()
+        build_point = lambda x, y: self._tr_matrix.tr_point(Point(x, y, z)).x_rnd()
 
         all_x = self.range_x
         all_y = self.function.calculate(all_x, z)
 
-        _points = [transform(x, y) for x, y in zip(all_x, all_y)]
+        _points = [build_point(x, y) for x, y in zip(all_x, all_y)]
         points = iter(_points)
 
         p_prev = next(points)
