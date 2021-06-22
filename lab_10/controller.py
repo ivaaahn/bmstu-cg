@@ -45,16 +45,81 @@ class Controller:
         if self.p_left is not None:
             self._horiz.fill(self.p_left, p_curr)
 
+            # -> Отрисовки ребер в Роджерсе нет, но Куров хочет.
+            # -> В таком случае будут видны невидимые линии ребер
+            # -> Куров об этом особо ничего не говорил не говорил фиксить
+            # -> Я решил это пофиксить  способом, от которого мы ушли при отрисовке всего остального.
+            # -> Я считаю, что для ребер можно заюзать и этот метод прокатит...
+            if self._horiz.visibility_type(p_curr) is not Visible.NOT:
+                self._canvas.draw_line(self.p_left, p_curr)
+
         self.p_left = copy(p_curr)
 
     def handle_right_edge(self, p_curr: Point) -> None:
         if self.p_right is not None:
             self._horiz.fill(self.p_right, p_curr)
 
+            # см комментарий в handle_left_edge()
+            if self._horiz.visibility_type(p_curr) is not Visible.NOT:
+                self._canvas.draw_line(self.p_right, p_curr)
+
         self.p_right = copy(p_curr)
 
     @staticmethod
+    def find_intersect2(p1: Point, p2: Point, hor: List[float]) -> Point:
+        """
+        Это второй вариант реализации поиска пересечения отрезка с горизонтом.
+        В Роджерсе по-дефолту приведен способ, реализованный в методе find_intersect,
+        однако Куров приводил данный способ (в Роджерсе он тоже есть).
+
+        :param p1: точка начала отрезка
+        :param p2: точка конца отрезка
+        :param hor: горизонт, с которым ищем пересечение
+        :return: точка пересечения отрезка с горизонтом
+        """
+
+        if p2.x == p1.x:
+            return Point(p1.x, hor[p1.x], p1.z)
+
+        if abs(p1.y - hor[p1.x]) < 1e-5:
+            return copy(p1)
+
+        if abs(p2.y - hor[p2.x]) < 1e-5:
+            return copy(p2)
+
+        # p - previous, c - current
+
+        x1p, y1p = p1.x, hor[p1.x]
+        x2p, y2p = p2.x, hor[p2.x]
+
+        x1c, y1c = p1.x, p1.y
+        x2c, y2c = p2.x, p2.y
+
+        dyp = y2p - y1p
+        dyc = y2c - y1c
+
+        dx = x2c - x1c
+
+        m = dyc / dx
+
+        x = x1c - dx * (y1p - y1c) / (dyp - dyc)
+
+        y = m * (x - x1c) + y1c
+
+        return Point(x, y).x_rnd()
+
+    @staticmethod
     def find_intersect(p1: Point, p2: Point, hor: List[float]) -> Point:
+        """
+        Это первый вариант реализации поиска пересечения отрезка с горизонтом.
+        Данная реализация приведена в Роджерсе в качестве дефолтной
+
+        :param p1: точка начала отрезка
+        :param p2: точка конца отрезка
+        :param hor: горизонт, с которым ищем пересечение
+        :return: точка пересечения отрезка с горизонтом
+        """
+
         def sign(x) -> int:
             return 1 if (x > 0) else -1 if (x < 0) else 0
 
